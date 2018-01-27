@@ -1,0 +1,868 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass extarticle
+\begin_preamble
+\renewcommand{\qedsymbol}{$\blacksquare$}
+
+\interdisplaylinepenalty=2500
+\usepackage{dsfont}
+\usepackage{relsize}
+\usepackage{subdepth}
+\allowdisplaybreaks
+
+
+
+\usepackage{url}
+
+\DeclareFontFamily{OT1}{pzc}{}
+\DeclareFontShape{OT1}{pzc}{m}{it}{<-> s * [1.200] pzcmi7t}{}
+\DeclareMathAlphabet{\mathpzc}{OT1}{pzc}{m}{it}
+
+\usepackage[noadjust]{cite}
+\usepackage{filecontents}
+
+\usepackage{stfloats}
+
+\usepackage{babel}
+\usepackage[en-US]{datetime2}
+\DTMlangsetup{showdayofmonth=false}
+
+
+\renewcommand\footnotemark{}
+%\renewcommand\footnoterule{}
+
+\renewcommand\labelenumi{\bf{\theenumi})}
+
+\usepackage{bigints}
+
+\usepackage{scalerel}
+\def\stretchint#1{\vcenter{\hbox{\stretchto[220]{\displaystyle\int}{#1}}}}
+\def\scaleint#1{\vcenter{\hbox{\scaleto[4ex]{\displaystyle\int}{#1}}}}
+
+\newcommand{\vequiv}{\rotatebox[origin=c]{-90}{$\equiv$}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[framemethod=tikz]{mdframed}
+
+\newmdenv[
+  hidealllines=true,
+  backgroundcolor=blue!10,
+  innerleftmargin=8pt,
+  innerrightmargin=8pt,
+  innertopmargin=0pt,
+  innerbottommargin=6pt,
+  leftmargin=-0pt,
+  rightmargin=-0pt
+]{shadedbox}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\usepackage{commath}
+\usepackage[sc,osf]{mathpazo}
+
+%\let\oldnorm\norm   % <-- Store original \norm as \oldnorm
+%\let\norm\undefined % <-- "Undefine" \norm
+%\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\end_preamble
+\use_default_options true
+\begin_modules
+figs-within-sections
+theorems-ams-bytype
+theorems-ams-extended-bytype
+enumitem
+\end_modules
+\maintain_unincluded_children false
+\begin_local_layout
+Format 60
+
+InsetLayout Flex:Shaded_Box
+  LyXType           custom
+  LabelString       "Shaded Box"
+  LatexType     Environment
+  LatexName     shadedbox
+  Decoration        Classic
+  MultiPar              true
+  CustomPars        true
+  ResetsFont        true
+  LabelFont
+    Color               foreground
+    Size                Small
+  EndFont
+End
+\end_local_layout
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding 
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 11
+\spacing single
+\use_hyperref true
+\pdf_bookmarks true
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder true
+\pdf_colorlinks true
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 2
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2.5cm
+\topmargin 2.5cm
+\rightmargin 2.5cm
+\bottommargin 3.5cm
+\secnumdepth 4
+\tocdepth 4
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+
+\series bold
+LP Formulation of the
+\begin_inset Newline newline
+\end_inset
+
+Supplier Production Plan
+\end_layout
+
+\begin_layout Author
+Dionysios S.
+ Kalogerias and Warren B.
+ Powell
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+The Authors are with the Department of Operations Research & Financial Engineeri
+ng (ORFE), Princeton University, Sherrerd Hall, Charlton Street, Princeton,
+ NJ 08544, USA.
+ e-mail: {dkalogerias, powell}@princeton.edu.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+\begin_inset VSpace -30pt
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Notation & Problem Data
+\end_layout
+
+\begin_layout Standard
+The total operational horizon of the supply chain and the supplier planning
+ horizon will be denoted as 
+\begin_inset Formula $T\in\mathbb{N}^{+}$
+\end_inset
+
+ and 
+\begin_inset Formula $H\in\mathbb{N}^{+}$
+\end_inset
+
+, respectively and, by convention, 
+\shape italic
+time will be measured in days
+\shape default
+.
+ For notational simplicity, since all suppliers receive and generate the
+ same 
+\shape italic
+type
+\shape default
+ of information, every day, we may employ generic notation, common to all
+ suppliers, without the use of an explicit 
+\begin_inset Quotes eld
+\end_inset
+
+supplier index
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Suppose that we are on the 
+\begin_inset Formula $t$
+\end_inset
+
+-th day, for some 
+\shape italic
+fixed
+\shape default
+ 
+\begin_inset Formula $t\in\mathbb{N}_{T}^{+}$
+\end_inset
+
+, and suppose that 
+\shape italic
+Joe
+\shape default
+ is a supplier.
+ Intuitively, we will call the 
+\begin_inset Formula $t$
+\end_inset
+
+-th day 
+\shape italic
+today
+\shape default
+.
+ We also make the following explicit assumptions:
+\end_layout
+
+\begin_layout Itemize
+First, we take into account the inevitable existence of non-zero travel
+ times between suppliers; let 
+\begin_inset Formula $\tau_{c_{j}}\in\mathbb{N}^{+}$
+\end_inset
+
+ denote the travel time (in days) between Joe's location and that of 
+\shape italic
+child supplier
+\shape default
+ 
+\begin_inset Formula $c_{j}\in{\cal N}_{Joe}$
+\end_inset
+
+, for all 
+\begin_inset Formula $j\in\mathbb{N}_{\left|{\cal N}_{Joe}\right|}^{+}$
+\end_inset
+
+.
+ We also define the 
+\shape italic
+lag vector
+\shape default
+
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{\tau}\triangleq\left[\tau_{c_{1}}\,\ldots\,\tau_{c_{\left|{\cal N}_{Joe}\right|}}\right]^{\boldsymbol{T}}\in\left[\mathbb{N}^{+}\right]^{\left|{\cal N}_{Joe}\right|}.
+\end{equation}
+
+\end_inset
+
+Likewise, we let 
+\begin_inset Formula $\tau_{p}\in\mathbb{N}^{+}$
+\end_inset
+
+ be the travel time between Joe and his 
+\shape italic
+parent supplier
+\shape default
+.
+\end_layout
+
+\begin_layout Itemize
+Second, we constrain each supplier (and thus, also Joe), so that an incoming
+ part may be used for production 
+\shape italic
+at least one day after its arrival
+\shape default
+ to the supplier's location.
+\end_layout
+
+\begin_layout Itemize
+Third, implementation of today's production plan (decision) and shipment
+ of produced parts to the parent supplier 
+\shape italic
+both
+\shape default
+ take place on the 
+\shape italic
+same day (today)
+\shape default
+.
+\end_layout
+
+\begin_layout Standard
+Under those considerations, every day, Joe receives the following information:
+\end_layout
+
+\begin_layout Itemize
+From 
+\shape italic
+downstream
+\shape default
+ (closer to the final product), the 
+\shape italic
+current
+\shape default
+, 
+\shape italic
+temporally adjusted
+\shape default
+ production 
+\shape italic
+forecast
+\shape default
+ of his parent (the supplier using Joe's produced part).
+ This production plan is denoted by a vector
+\begin_inset Formula 
+\begin{equation}
+\widetilde{\boldsymbol{x}}_{t-1}^{D}\triangleq\left[\widetilde{x}_{t-1,t+\tau_{p}+1}^{D}\,\widetilde{x}_{t-1,t+\tau_{p}+2}^{D}\,\ldots\,\widetilde{x}_{t-1,t+\tau_{p}+H}^{D}\right]^{\boldsymbol{T}}\in\mathbb{N}^{H},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\widetilde{x}_{t-1,t'}^{D}$
+\end_inset
+
+ constitutes the 
+\shape italic
+demand in number of parts
+\shape default
+ on the 
+\shape italic
+
+\begin_inset Formula $\left(t'-t-\tau_{p}-1\right)$
+\end_inset
+
+-th day from today
+\shape default
+, for each 
+\begin_inset Formula $t'\in\mathbb{N}_{t+\tau_{p}+H}^{t+\tau_{p}+1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+From 
+\shape italic
+upstream
+\shape default
+ (closer to basic supplies - leafs of the supply chain tree), the 
+\shape italic
+current
+\shape default
+, 
+\shape italic
+temporally
+\shape default
+ 
+\shape italic
+adjusted
+\shape default
+ production 
+\shape italic
+forecasts
+\shape default
+ from 
+\shape italic
+all
+\shape default
+ of his children (the suppliers that supply Joe with parts).
+ Those production plans are denoted as
+\begin_inset Formula 
+\begin{equation}
+\widetilde{\boldsymbol{x}}_{c,t-1}^{S}\triangleq\left[\widetilde{x}_{c,t-1,t-1}^{S}\,\widetilde{x}_{c,t-1,t}^{S}\,\ldots\,\widetilde{x}_{c,t-1,t+H-\tau_{c}-2}^{S}\right]^{\boldsymbol{T}}\in\mathbb{N}^{H-\tau_{c}},\quad c\in{\cal N}_{Joe}^{-},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula ${\cal N}_{Joe}^{-}$
+\end_inset
+
+ is the set containing the 
+\shape italic
+labels
+\shape default
+ of Joe's children suppliers (of course, this set can be made bijective
+ to a subset of the naturals), where 
+\begin_inset Formula $\widetilde{x}_{c,t-1,t'}$
+\end_inset
+
+ constitutes the 
+\shape italic
+projected supply
+\shape default
+ 
+\shape italic
+in number of parts
+\shape default
+ from the child supplier 
+\begin_inset Formula $c$
+\end_inset
+
+, on the 
+\shape italic
+
+\begin_inset Formula $\left(t'-t-\tau_{c}-1\right)$
+\end_inset
+
+-th day from today
+\shape default
+, for each 
+\begin_inset Formula $t'\in\mathbb{N}_{t+H-2}^{t+\tau_{c}+1}$
+\end_inset
+
+.
+ For convenience, we may also define the zero-padded, 
+\shape italic
+extended plans
+\shape default
+
+\begin_inset Formula 
+\begin{equation}
+\widetilde{\boldsymbol{x}}_{c,t-1}^{S,E}\triangleq\left[{\bf 0}_{\tau_{c}}\,\widetilde{\boldsymbol{x}}_{c,t-1}^{S}\right]^{\boldsymbol{T}}\in\mathbb{N}^{H},\quad c\in{\cal N}_{Joe}^{-},
+\end{equation}
+
+\end_inset
+
+as well as the vectors of 
+\shape italic
+extended plans across children suppliers
+\shape default
+
+\begin_inset Formula 
+\begin{equation}
+\widetilde{\boldsymbol{x}}_{t-1,t'}^{S,E}\triangleq\left[\widetilde{x}_{c_{1},t-1,t'}^{S,E}\,\widetilde{x}_{c_{2},t-1,t'}^{S,E}\,\ldots\,\widetilde{x}_{c_{\left|{\cal N}_{Joe}\right|},t-1,t'}^{S,E}\right]^{\boldsymbol{T}}\in\mathbb{N}^{\left|{\cal N}_{Joe}\right|},\quad t'\in\mathbb{N}_{t+H-1}^{t},
+\end{equation}
+
+\end_inset
+
+where, for finite set 
+\begin_inset Formula ${\cal A}$
+\end_inset
+
+, 
+\begin_inset Formula $\left|{\cal A}\right|$
+\end_inset
+
+ denotes its cardinality, and 
+\begin_inset Formula $c_{j}\in{\cal N}_{Joe}$
+\end_inset
+
+, for all 
+\begin_inset Formula $j\in\mathbb{N}_{\left|{\cal N}_{Joe}\right|}^{+}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+At the 
+\begin_inset Formula $t$
+\end_inset
+
+-th day, implementing some policy, Joe generates his own production plan,
+ denoted as
+\begin_inset Formula 
+\begin{equation}
+\widetilde{\boldsymbol{x}}_{t}\triangleq\left[\widetilde{x}_{tt}\,\widetilde{x}_{t,t+1}\,\ldots\,\widetilde{x}_{t,t+H-1}\right]^{\boldsymbol{T}}\in\mathbb{N}^{H},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $x_{tt'}$
+\end_inset
+
+ is the 
+\shape italic
+number of parts to be produced
+\shape default
+ on the 
+\shape italic
+
+\begin_inset Formula $\left(t'-t\right)$
+\end_inset
+
+-th day from today
+\shape default
+, for all 
+\begin_inset Formula $t'\in\mathbb{N}_{t+H-1}^{t}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+In order to produce, Joe needs certain quantities of parts from his children
+ suppliers.
+ Those quantities are assumed to be fixed in time, known and stored in the
+ 
+\shape italic
+quantity vector
+\shape default
+, defined as
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{Q}\triangleq\left[Q_{c_{1}}\,Q_{c_{2}}\,\ldots\,Q_{c_{\left|{\cal N}_{Joe}\right|}}\right]^{\boldsymbol{T}}\in\left[\mathbb{N}^{+}\right]^{\left|{\cal N}_{Joe}\right|},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $Q_{c_{j}}$
+\end_inset
+
+ denotes the quantity of parts required from child supplier 
+\begin_inset Formula $c_{j}\in{\cal N}_{Joe}$
+\end_inset
+
+, 
+\begin_inset Formula $j\in\mathbb{N}_{\left|{\cal N}_{Joe}\right|}^{+}$
+\end_inset
+
+, required so that Joe can produce 
+\shape italic
+precisely one
+\shape default
+ of his parts.
+\end_layout
+
+\begin_layout Standard
+Additionally, Joe maintains an 
+\shape italic
+input (or part) inventory
+\shape default
+ for the parts that have arrived 
+\shape italic
+and
+\shape default
+ are available for production.
+ In particular, under the setting established above, if the vector 
+\begin_inset Formula $\boldsymbol{R}_{t}^{I}\triangleq\widetilde{\boldsymbol{R}}_{tt}^{I}\in\mathbb{N}^{\left|{\cal N}_{Joe}\right|}$
+\end_inset
+
+ stacks the resources (per part) available on the current day (or the
+\shape italic
+ 
+\begin_inset Formula $0$
+\end_inset
+
+-th day from today
+\shape default
+), 
+\shape italic
+both
+\shape default
+ from the previous day 
+\shape italic
+and
+\shape default
+ including any additions of incoming parts shipped to Joe earlier, Joe's
+ input inventory evolves 
+\shape italic
+deterministically
+\shape default
+, according to the differential equation
+\begin_inset Formula 
+\begin{equation}
+\widetilde{\boldsymbol{R}}_{t,t'+1}^{I}\equiv\widetilde{\boldsymbol{R}}_{tt'}^{I}-\boldsymbol{Q}\widetilde{x}_{tt'}+\widetilde{\boldsymbol{x}}_{t-1,t'}^{S,E}\in\mathbb{Z}^{\left|{\cal N}_{Joe}\right|},\quad\forall t'\in\mathbb{N}_{t+H-1}^{t}.
+\end{equation}
+
+\end_inset
+
+Note that 
+\begin_inset Formula $\widetilde{\boldsymbol{R}}_{tt'}^{I}$
+\end_inset
+
+ denotes the
+\shape italic
+ 
+\shape default
+inventory levels at the 
+\shape italic
+start
+\shape default
+ of day 
+\begin_inset Formula $t'$
+\end_inset
+
+, 
+\shape italic
+before
+\shape default
+ all production and part additions due to (projected) arrivals have taken
+ place.
+ Also, we do not require 
+\begin_inset Formula $\widetilde{\boldsymbol{R}}_{tt'}^{I}$
+\end_inset
+
+ to be nonnegative by definition; instead, this requirement will be imposed
+ as a constraint while designing the plan 
+\begin_inset Formula $\widetilde{\boldsymbol{x}}_{t}$
+\end_inset
+
+ (see below).
+\end_layout
+
+\begin_layout Standard
+Except for the input inventory, Joe maintains an
+\shape italic
+ output (or production, or stock) inventory
+\shape default
+, for the parts that have been produced by Joe, but have not yet shipped
+ downstream.
+ Similarly to the description of the input inventory, if 
+\begin_inset Formula $R_{t}^{O}\triangleq\widetilde{R}_{tt}^{O}\in\mathbb{N}$
+\end_inset
+
+ denotes the stock available on the current day, Joe's stock inventory is
+ assumed to evolve according to the differential equation
+\begin_inset Formula 
+\begin{equation}
+\widetilde{R}_{t,t'+1}^{O}\equiv\widetilde{R}_{tt'}^{O}+\widetilde{x}_{tt'}-\left(\widetilde{x}_{t-1,t'}^{D}-\widetilde{x}_{tt'}^{UD}\right)\in\mathbb{Z},\quad\forall t'\in\mathbb{N}_{t+H-1}^{t},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\widetilde{x}_{tt'}^{UD}\in\mathbb{N}$
+\end_inset
+
+ constitutes the 
+\shape italic
+projected unmet demand
+\shape default
+ on the 
+\shape italic
+
+\begin_inset Formula $\left(t'-t\right)$
+\end_inset
+
+-th day from today
+\shape default
+, for each 
+\begin_inset Formula $t'\in\mathbb{N}_{t+H-1}^{t}$
+\end_inset
+
+.
+ Therefore, the difference 
+\begin_inset Formula $\widetilde{x}_{t-1,t'}^{D}-\widetilde{x}_{tt'}^{UD}$
+\end_inset
+
+ expresses the 
+\shape italic
+projected met demand
+\shape default
+, for each 
+\begin_inset Formula $t'\in\mathbb{N}_{t+H-1}^{t}$
+\end_inset
+
+.
+ Except for the requirement that 
+\begin_inset Formula $\widetilde{x}_{tt'}^{UD}$
+\end_inset
+
+ is a nonnegative integer, we must also have that 
+\begin_inset Formula $\widetilde{x}_{t-1,t'}^{D}-\widetilde{x}_{tt'}^{UD}\in\mathbb{N}$
+\end_inset
+
+, for all 
+\begin_inset Formula $t'\in\mathbb{N}_{t+H-1}^{t}$
+\end_inset
+
+, and that 
+\begin_inset Formula $\widetilde{R}_{t,t'+1}^{O}\in\mathbb{\mathbb{N}}$
+\end_inset
+
+, for all 
+\begin_inset Formula $t'\in\mathbb{N}_{t+H-1}^{t}$
+\end_inset
+
+, which is trivially equivalent to the constraint
+\begin_inset Formula 
+\begin{equation}
+\mathbb{Z}\ni\widetilde{x}_{tt'}^{UD}\ge\widetilde{x}_{tt'}^{D}-\widetilde{R}_{tt'}^{O}-\widetilde{x}_{tt'},\quad\forall t'\in\mathbb{N}_{t+H-1}^{t}.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Finally, it would not be reasonable to assume that Joe has an infinite productio
+n capacity.
+ Instead, we assume that Joe's production capacity is fixed on a 
+\shape italic
+per day basis
+\shape default
+; for simplicity, this capacity is taken as constant relative to time, and
+ will be denoted by 
+\begin_inset Formula $C\in\mathbb{N}$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Section
+Production Policy
+\end_layout
+
+\begin_layout Standard
+Every day, Joe's objective will be to come up will a 
+\shape italic
+feasible
+\shape default
+ production plan, not only for today, but also for all remaining days in
+ a horizon of length 
+\begin_inset Formula $H$
+\end_inset
+
+, so that, in general, some combination of downstream demand and inventory
+ maintenance costs are somehow meaningfully optimized.
+\end_layout
+
+\begin_layout Standard
+For simplicity, let us first 
+\shape italic
+relax integer constraints
+\shape default
+, for all problem variables.
+ Then, based on the our definitions above, and imposing the aforementioned
+ suitable requirements on the values of the inventories over time, one possible
+ formulation could be
+\begin_inset Formula 
+\begin{equation}
+\begin{array}{rl}
+\underset{\substack{\widetilde{\boldsymbol{R}}_{tt'}^{I},\widetilde{R}_{tt'}^{O}\widetilde{x}_{tt'},\widetilde{x}_{tt'}^{UD}\\
+\forall t'\in\mathbb{N}_{t+H}^{t+1}
+}
+}{\mathrm{minimize}} & {\displaystyle \sum_{t'\in\mathbb{N}_{t+H-1}^{t}}\theta_{tt'}\widetilde{x}_{tt'}^{UD}+\sum_{t'\in\mathbb{N}_{t+H-1}^{t}}\kappa^{O}\widetilde{R}_{t,t'+1}^{O}+\sum_{t'\in\mathbb{N}_{t+H-1}^{t}}\left(\boldsymbol{\kappa}^{I}\right)^{\boldsymbol{T}}\widetilde{\boldsymbol{R}}_{t,t'+1}^{I}}\\
+\mathrm{subject\,to}\hspace{0.37em} & \widetilde{\boldsymbol{R}}_{t,t'+1}^{I}\equiv\widetilde{\boldsymbol{R}}_{tt'}^{I}-\boldsymbol{Q}\widetilde{x}_{tt'}+\widetilde{\boldsymbol{x}}_{t-1,t'}^{S,E}\\
+ & \widetilde{\boldsymbol{R}}_{t,t'+1}^{I}\ge{\bf 0}\\
+ & 0\le\widetilde{x}_{tt'}\le C\\
+ & \widetilde{R}_{t,t'+1}^{O}\equiv\widetilde{R}_{tt'}^{O}+\widetilde{x}_{tt'}-\left(\widetilde{x}_{t-1,t'}^{D}-\widetilde{x}_{tt'}^{UD}\right)\\
+ & \widetilde{R}_{t,t'+1}^{O}\ge0\\
+ & 0\le\widetilde{x}_{tt'}^{UD}\le\widetilde{x}_{tt'}^{D},\quad\forall t'\in\mathbb{N}_{t+H-1}^{t}
+\end{array},
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\theta_{tt'}\ge0$
+\end_inset
+
+ is a tunable parameter, penalizing unmet demand 
+\begin_inset Formula $\widetilde{x}_{tt'}^{UD}$
+\end_inset
+
+, for all 
+\begin_inset Formula $t'\in\mathbb{N}_{t+H-1}^{t}$
+\end_inset
+
+, 
+\begin_inset Formula $\kappa^{S}\ge0$
+\end_inset
+
+ denotes the 
+\shape italic
+stock inventory storage cost per unit
+\shape default
+ and, likewise, 
+\begin_inset Formula 
+\begin{equation}
+\boldsymbol{\kappa}^{I}\triangleq\left[\kappa_{1}^{I}\,\ldots\,\kappa_{\left|{\cal N}_{Joe}\right|}^{I}\right]^{\boldsymbol{T}}\in\mathbb{R}_{+}^{\left|{\cal N}_{Joe}\right|},
+\end{equation}
+
+\end_inset
+
+with 
+\begin_inset Formula $\kappa_{j}^{I}$
+\end_inset
+
+ being the 
+\shape italic
+input inventory storage cost per unit of the 
+\begin_inset Formula $j$
+\end_inset
+
+-th part
+\shape default
+, 
+\begin_inset Formula $j\in\mathbb{N}_{\left|{\cal N}_{Joe}\right|}^{+}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+bibfiles "library"
+options "IEEEtran"
+
+\end_inset
+
+
+\begin_inset CommandInset citation
+LatexCommand cite
+key "Ash2000Probability"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
