@@ -1,3 +1,3 @@
 # SupplyChain_Simulator
 
-AE Supply Chain Simulator in Python
+A Supply Chain Simulator in Python
