@@ -847,10 +847,6 @@ input inventory storage cost per unit of the
 \end_layout
 
 \begin_layout Standard
-OK
-\end_layout
-
-\begin_layout Standard
 \begin_inset CommandInset bibtex
 LatexCommand bibtex
 bibfiles "library"
