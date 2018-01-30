@@ -32,8 +32,8 @@ def dataPrep(H):
             #------------------End of Parameters------------------#
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
-                                                attList[3], -7, [-1], -1, 0,
-                                                dict(zip([-1], [0])), dict(zip([-1], [10000000])), 0, 10,
+                                                attList[3], -7, [-1], dict(zip([-1], [0])), 0,
+                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 10,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -47,8 +47,7 @@ def dataPrep(H):
             # To be filled with travel times for each child
             spec = dict(zip(childList, np.zeros((len(childList)))))
             # Initial input inventory
-            #spec3 = dict(zip(childList, 10000000 * np.ones((len(childList), H))))
-            spec3 = dict(zip(childList, 10000000 * np.ones((len(childList)))))
+            spec3 = dict(zip(childList, 1000000 * np.ones((len(childList)))))
             # DownStream_Info_PRE
             spec4_PRE = np.zeros((H))
             # DownStream_Info_PRE

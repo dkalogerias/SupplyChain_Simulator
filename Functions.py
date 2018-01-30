@@ -8,7 +8,7 @@ from pulp import *
 #                                  FUNCTIONS                                  #
 ###############################################################################
 ###############################################################################
-def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels,
+def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
                       D, S, P,
                       RI_Current, RO_Current,
                       thetas, KO, KI,
@@ -19,13 +19,20 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels,
     ###############################################################################
     # Define decision variables
     RI_Vars = list()
+    UPD_Vars = list()
     RO_Vars = list()
     X_Vars = list()
     U_Vars = list()
     for t in range(H):
         RI_Vars.append(dict())
+        UPD_Vars.append(dict())
         for child in ChildrenLabels:
             RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
+            if t >= ChildrenTrTimes[child]:
+                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, 10, \
+                                                                                            LpInteger)
+            else:
+                UPD_Vars[t][child] = 0
         RO_Vars.append(LpVariable("OutputInventory_%s" %t, 0, None, LpInteger))
         X_Vars.append(LpVariable("ProductionDecision_%s" %t, 0, C, LpInteger))
         U_Vars.append(LpVariable("UnmetDemand_%s" %t, 0, None, LpInteger))
@@ -54,7 +61,7 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels,
             RO_Previous = RO_Vars[t - 1]
         for child in ChildrenLabels:
             prob += RI_Vars[t][child] - RI_Previous[child] \
-                        + Q[child] * X_Vars[t] - S[child][t] \
+                        + Q[child] * X_Vars[t] - UPD_Vars[t][child] \
                         - P[child][t] == 0
         prob += RO_Vars[t] - RO_Previous - X_Vars[t] + D[t] - U_Vars[t] == 0
         prob += U_Vars[t] - D[t] <= 0
@@ -82,8 +89,13 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels,
     for var in X_Vars:
         X_Values.append(int(var.varValue))
     In = dict()
+    UPD_Values = dict()
     for child in ChildrenLabels:
         In[child] = int(RI_Vars[0][child].varValue)
+        UPD_Values[child] = list()
+        for t in range(H):
+            if t >= ChildrenTrTimes[child]:
+                UPD_Values[child].append(int(UPD_Vars[t][child].varValue))
     #for var in RI_Vars[0]:
     #    In.append(int(var.varValue))
     Out = int(RO_Vars[0].varValue)
@@ -91,4 +103,4 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels,
     for var in U_Vars:
         UnMet.append(int(var.varValue))
     # Return
-    return X_Values, In, Out, UnMet
+    return X_Values, UPD_Values, In, Out, UnMet

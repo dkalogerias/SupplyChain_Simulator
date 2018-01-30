@@ -84,8 +84,8 @@ class Supplier:
             # Append with zeros "in the beginning"
             for child in self.ChildrenLabels:
                 ExtDataFromChildren[child][0 : int(self.ChildrenTrTimes[child])] = 0
-                ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ] \
-                                                                                = DataFromChildren[child]
+                ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ]  = \
+                                                                    DataFromChildren[child]
         else:
             ExtDataFromChildren = dict(zip(self.ChildrenLabels, np.zeros((1, int(self.Horizon)))))
         #----------------------------------------------------------------------#
@@ -96,18 +96,21 @@ class Supplier:
         ExtDataFromParent.append(DataFromParent[-1])
         ExtDataFromParent.append(DataFromParent[-1])       
         # Solve the MIP now!
-        X_Values, In, Out, Unmet = \
-        Plan_LookaheadMIP(int(self.Horizon), self.NumberOfChildren, self.ChildrenLabels,
+        X_Values, UpStreamDemand, In, Out, Unmet = \
+        Plan_LookaheadMIP(int(self.Horizon), self.NumberOfChildren, self.ChildrenLabels, self.ChildrenTrTimes,
                           ExtDataFromParent[0 : int(self.Horizon)], ExtDataFromChildren, ProjectedShipments,
                           self.InputInventory, self.OutputInventory,
                           self.thetas, self.KO, self.KI,
                           self.ProdCap, self.ProductDemands)
         # Update Supplier's Variables
-        self.ProductionPlan = np.array(X_Values).astype(np.float)
+        self.ProductionPlan = X_Values
         for child in self.ChildrenLabels:
             self.InputInventory[child] = In[child]
         self.OutputInventory = Out
         self.CurrentUnMet = Unmet[0]
+        # DeBug
+        #print('Demand From DownStream:', list(DataFromParent))
+        #print('ProductionPlan:', self.ProductionPlan)
         #----------------------------------------------------------------------#
         #----------------------------------------------------------------------#
         # Generate DownStream_Info
@@ -122,7 +125,7 @@ class Supplier:
             for child in self.ChildrenLabels:
                 index = int(self.ChildrenTrTimes[child])
                 self.UpStream_Info_POST[child] =  self.ProductDemands[child] * \
-                                            self.ProductionPlan[index + 2 : ]            
+                                                np.array(UpStreamDemand[child]).astype(np.int)          
     ##########################################
     # Produce Parts for TODAY
     def ProduceParts(self, Parent, DataFromChildren, DataFromParent):
