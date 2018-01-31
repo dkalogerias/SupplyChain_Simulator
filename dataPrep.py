@@ -33,7 +33,7 @@ def dataPrep(H):
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 10,
+                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 30,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -47,7 +47,7 @@ def dataPrep(H):
             # To be filled with travel times for each child
             spec = dict(zip(childList, np.zeros((len(childList)))))
             # Initial input inventory
-            spec3 = dict(zip(childList, 1000000 * np.ones((len(childList)))))
+            spec3 = dict(zip(childList, 10 * np.ones((len(childList)))))
             # DownStream_Info_PRE
             spec4_PRE = np.zeros((H))
             # DownStream_Info_PRE
@@ -66,10 +66,10 @@ def dataPrep(H):
             # Input cost per unit per part
             KI = dict(zip(childList, 3 * np.random.rand(len(childList))))               
             #------------------End of Parameters------------------#
-            # Contruct Supplier
+            # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
                                                 attList[3], -7, childList, spec, len(childList), -1,
-                                                dict(zip(childList, demandList)), spec3, 0, 4,
+                                                dict(zip(childList, demandList)), spec3, 0, 30,
                                                 np.zeros((H)), spec4_PRE, spec5_PRE, spec4_POST, spec5_POST,
                                                 spec6, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -131,7 +131,7 @@ def dataPrep(H):
     # -------------------------------------------------------------------------
     # NOTE: +1 day for arrival overhead
     #       +1 day for day passing
-    LocFile = open('PilotView/Locations.pf','w+') # Open file (for PilotView)
+    LocFile = open('PilotView/Locations.pf','w') # Createe and open file (for PilotView)
     maxLagTotal = 0 # Ininitialize variable for maximum total travel lag
     for ID, value in SupplierDict.items():
         # Assign initial horizon value (correct for Root)
@@ -176,9 +176,9 @@ def dataPrep(H):
         LocFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
                                 str(SupplierDict[ID].Lat), \
                                 str(SupplierDict[ID].Long), \
-                                str(SupplierDict[ID].treeDepth)]))
-        LocFile.write('\n')
+                                str(SupplierDict[ID].treeDepth), '\n']))
     # endfor
+    LocFile.close()
     print('... Done.')
     print('===============================================')
     return SupplierDict, maxLagTotal

@@ -135,6 +135,7 @@ class Supplier:
         # Actual Production for Today
         # Today's MET Demand
         MetDemandToday = int(DataFromParent[0] - self.CurrentUnMet)
+        #print('Met Demand:', MetDemandToday)
         # Create a list for all produced parts
         Produced = list()
         # Produce parts one-by-one

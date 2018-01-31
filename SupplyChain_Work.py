@@ -2,6 +2,7 @@
 # Standard Libraries  
 import numpy as np
 import time as time
+import datetime as dt
 import matplotlib.pyplot as mp
 # Custom Libraries
 from dataPrep import *
@@ -10,7 +11,7 @@ from SupplierClasses import Supplier, LocalPart
 print('\n===============================================')
 print()
 # Specify the Supplier Horizon (later, make this user input)
-H = 30
+H = 13
 # Specify the total chain time (also user input, later)
 T = 40
 print('Supplier Horizon Length (Days): ', H)
@@ -19,6 +20,21 @@ print()
 # Import Supply Chain data from file Chain.txt (provided)
 # Also, perform data preparation
 SupplierDict, maxLagTotal = dataPrep(H)
+# Initialize header files for PilotView
+# Top level parameter file
+SCParFile = open('PilotView/SupplyChainParameters.pf','w')
+SCParFile.write(''.join(['Void\n',
+                         'Locations.pf\n',
+                         dt.datetime.now().strftime('%B %d %Y %I:%M %p'), '\n',
+                         str(T * 24), '\n',
+                         str(24 * 60), '\n',
+                         'PartFlow PartFlow_Header.pf PartFlow_Data.pf', '\n',
+                         ]))
+SCParFile.close()
+# PartFlow header file
+PartFlowHeaderFile = open('PilotView/PartFlow_Header.pf','w')
+PartFlowHeaderFile.write('From To TIME Duration FLOW')
+PartFlowHeaderFile.close()
 ###############################################################################
 #                      Ready to execute the main Loop                         #
 ###############################################################################
@@ -35,14 +51,18 @@ RootPlan[T: ] = 0
 print('\nSimulation Started...')
 # At each time step
 start = time.time() # Also start measuring total time
+PartFlowFile = open('PilotView/PartFlow_Data.pf','w') # Create and open file (for PilotView)
 for t in range(T):
     startDay = time.time() # Also start measuring Supplier update time PER day
     print('============================================')
-    print('Day', t + 1)
+    print('Day', t)
     # Update shipment list for EACH supplier
-    for ID, value in SupplierDict.items():   
-        for part in SupplierDict[ID].ShipmentList[:]:
-            part.LocalPartUpdate(SupplierDict[ID])
+    for ID, value in SupplierDict.items():
+        if SupplierDict[ID].NumberOfChildren != 0:
+            # Iterate in a COPY of the current ShipmentList  
+            for part in SupplierDict[ID].ShipmentList[:]:
+                # Update parts in ShipmentList of current Supplier
+                part.LocalPartUpdate(SupplierDict[ID])
     # Produce Parts (and "PRIVATELY" update attributes) for EACH Supplier
     for ID, value in SupplierDict.items(): # This should be able to be performed in parallel
         #print('Day', t + 1, '/ Updating Suppler ID:', int(ID))
@@ -63,10 +83,27 @@ for t in range(T):
     for ID, value in SupplierDict.items():
         SupplierDict[ID].DownStream_Info_PRE = SupplierDict[ID].DownStream_Info_POST
         SupplierDict[ID].UpStream_Info_PRE = SupplierDict[ID].UpStream_Info_POST
+        # Write PartFlowFile for current Supplier (for PilotView)
+        if SupplierDict[ID].NumberOfChildren != 0:
+            # Initialize dictionary for keeping the flow of each child
+            childrenFlows = dict(zip(SupplierDict[ID].ChildrenLabels, \
+                                     np.zeros((SupplierDict[ID].NumberOfChildren)))) 
+            # Iterate in a COPY of the current ShipmentList
+            # For each part in ShipmentList, record its flow 
+            for part in SupplierDict[ID].ShipmentList:
+                childrenFlows[part.From] += 1 # Update Flow
+            # Write PartFlowFile (for PilotView)
+            for child in SupplierDict[ID].ChildrenLabels:
+                if childrenFlows[child] >= 1:
+                    PartFlowFile.write(' '.join([str(int(child)), \
+                                                 str(int(SupplierDict[ID].Label)), \
+                                                 str(24 * 60 * t), str(24 * 60), \
+                                                 str(int(childrenFlows[child])), '\n']))
     endDay = time.time() # End measuring Supplier update time PER day
     print('Time Elapsed (Suppliers Updating):', round(endDay - startDay, 2), 'sec.')
     #wait = input('PRESS ENTER TO CONTINUE.\n')
 # endfor
+PartFlowFile.close()
 end = time.time() # End measuring total time
 print('\n... Done.')
 print('===============================================')
