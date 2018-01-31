@@ -8,7 +8,7 @@ from Functions import Plan_LookaheadMIP
 class Supplier:
     # Constructor...
     def __init__(self, Label, Lat, Long,
-                 ParentLabel, ParentTrTime, ChildrenLabels, ChildrenTrTimes, NumberOfChildren,
+                 ParentLabel, ParentTrTime, ChildrenLabels, ChildrenTrTimes, NumberOfChildren, treeDepth,
                  ProductDemands, InputInventory, OutputInventory, ProdCap,
                  ProductionPlan, DownStream_Info_PRE, UpStream_Info_PRE, DownStream_Info_POST, UpStream_Info_POST,
                  ProdFailure, Horizon, CurrentUnMet, ShipmentList,
@@ -21,6 +21,7 @@ class Supplier:
         self.ChildrenLabels = ChildrenLabels
         self.ChildrenTrTimes = ChildrenTrTimes
         self.NumberOfChildren = NumberOfChildren
+        self.treeDepth = treeDepth # Supplier's depth in the supply chain (tree)
         self.ProductDemands = ProductDemands # Upstream part demands PER produced part
         self.InputInventory = InputInventory
         self.OutputInventory = OutputInventory

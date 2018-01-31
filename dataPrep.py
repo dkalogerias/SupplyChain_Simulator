@@ -32,7 +32,7 @@ def dataPrep(H):
             #------------------End of Parameters------------------#
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
-                                                attList[3], -7, [-1], dict(zip([-1], [0])), 0,
+                                                attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
                                                 dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 10,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
@@ -68,7 +68,7 @@ def dataPrep(H):
             #------------------End of Parameters------------------#
             # Contruct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
-                                                attList[3], -7, childList, spec, len(childList),
+                                                attList[3], -7, childList, spec, len(childList), -1,
                                                 dict(zip(childList, demandList)), spec3, 0, 4,
                                                 np.zeros((H)), spec4_PRE, spec5_PRE, spec4_POST, spec5_POST,
                                                 spec6, -1, 0, list(),
@@ -125,12 +125,19 @@ def dataPrep(H):
     print('- Determine Supplier Horizons...')
     # (Re)Set correct local horizon for each supplier,
     # based on the total travel time to Root.
+    # Also: Find depth of each supplier in the chain
+    # Also: Write location file for PilotView
+    # Also: fix the thetas for each supplier, using correct horizon (temporary)
+    # -------------------------------------------------------------------------
     # NOTE: +1 day for arrival overhead
     #       +1 day for day passing
+    LocFile = open('PilotView/Locations.pf','w+') # Open file (for PilotView)
     maxLagTotal = 0 # Ininitialize variable for maximum total travel lag
     for ID, value in SupplierDict.items():
         # Assign initial horizon value (correct for Root)
         SupplierDict[ID].Horizon = H
+        # Assign initial tree depth (by the way)
+        SupplierDict[ID].treeDepth = 0
         # Ininitialize variable for LOCAL total travel lag
         TotalLag = 0
         # If not at Root, update horizon recursively following the path to the Root
@@ -139,6 +146,8 @@ def dataPrep(H):
             # Initialize Supplier ID
             LocalID = ID
             while True:
+                # Update tree depth
+                SupplierDict[ID].treeDepth += 1
                 # Get parent travel time from current Supplier (on the part to Root)
                 LocalParentTrTime = SupplierDict[LocalID].ParentTrTime
                 # Update LOCAL total travel lag
@@ -163,6 +172,12 @@ def dataPrep(H):
         maxLagTotal = max(maxLagTotal, TotalLag)
         # BY THE WAY, fix thetas (tunable)!!!
         SupplierDict[ID].thetas = 5 * np.random.rand(int(SupplierDict[ID].Horizon))
+        # Write location file for PilotView
+        LocFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
+                                str(SupplierDict[ID].Lat), \
+                                str(SupplierDict[ID].Long), \
+                                str(SupplierDict[ID].treeDepth)]))
+        LocFile.write('\n')
     # endfor
     print('... Done.')
     print('===============================================')
