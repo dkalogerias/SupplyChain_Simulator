@@ -11,9 +11,9 @@ from SupplierClasses import Supplier, LocalPart
 print('\n===============================================')
 print()
 # Specify the Supplier Horizon (later, make this user input)
-H = 13
+H = 30
 # Specify the total chain time (also user input, later)
-T = 40
+T = 100
 print('Supplier Horizon Length (Days): ', H)
 print('Total Supply Chain Operation (Days): ', T)
 print()
