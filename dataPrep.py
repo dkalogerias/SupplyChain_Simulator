@@ -175,7 +175,7 @@ def dataPrep(H):
         # Write location file for PilotView
         LocFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
                                 str(SupplierDict[ID].Lat), \
-                                str(SupplierDict[ID].Long), \
+                                str(-SupplierDict[ID].Long), \
                                 str(SupplierDict[ID].treeDepth), '\n']))
     # endfor
     LocFile.close()
