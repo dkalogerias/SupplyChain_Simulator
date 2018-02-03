@@ -33,7 +33,7 @@ def dataPrep(H):
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 30,
+                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 30000,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -47,7 +47,7 @@ def dataPrep(H):
             # To be filled with travel times for each child
             spec = dict(zip(childList, np.zeros((len(childList)))))
             # Initial input inventory
-            spec3 = dict(zip(childList, 10 * np.ones((len(childList)))))
+            spec3 = dict(zip(childList, 100 * np.ones((len(childList)))))
             # DownStream_Info_PRE
             spec4_PRE = np.zeros((H))
             # DownStream_Info_PRE
@@ -62,14 +62,16 @@ def dataPrep(H):
             # Thetas (tunable)
             thetas = 5 * np.random.rand(H)
             # Stock Cost per Unit
-            KO = 5 * np.random.rand(1)
+            KO = 0.5 * np.random.rand(1)
             # Input cost per unit per part
-            KI = dict(zip(childList, 3 * np.random.rand(len(childList))))               
+            KI = dict(zip(childList, 0.5 * np.random.rand(len(childList))))               
             #------------------End of Parameters------------------#
+            if attList[3] == -1: localCapacity = 1
+            else: localCapacity = 30000
             # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
                                                 attList[3], -7, childList, spec, len(childList), -1,
-                                                dict(zip(childList, demandList)), spec3, 0, 30,
+                                                dict(zip(childList, demandList)), spec3, 0, localCapacity,
                                                 np.zeros((H)), spec4_PRE, spec5_PRE, spec4_POST, spec5_POST,
                                                 spec6, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -171,7 +173,11 @@ def dataPrep(H):
         # Update maximum total travel lag
         maxLagTotal = max(maxLagTotal, TotalLag)
         # BY THE WAY, fix thetas (tunable)!!!
-        SupplierDict[ID].thetas = 5 * np.random.rand(int(SupplierDict[ID].Horizon))
+        #SupplierDict[ID].thetas = 5 * np.random.rand(int(SupplierDict[ID].Horizon))
+        # Put the initial value 1 to all thetas, for all Suppliers
+        #SupplierDict[ID].thetas = 5 * np.ones((int(SupplierDict[ID].Horizon)))
+        # Exponentially decreasing thetas, for all Suppliers
+        SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 5, int(SupplierDict[ID].Horizon)))
         # Write location file for PilotView
         LocFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
                                 str(SupplierDict[ID].Lat), \

@@ -109,9 +109,6 @@ class Supplier:
             self.InputInventory[child] = In[child]
         self.OutputInventory = Out
         self.CurrentUnMet = Unmet[0]
-        # DeBug
-        #print('Demand From DownStream:', list(DataFromParent))
-        #print('ProductionPlan:', self.ProductionPlan)
         #----------------------------------------------------------------------#
         #----------------------------------------------------------------------#
         # Generate DownStream_Info
@@ -126,7 +123,27 @@ class Supplier:
             for child in self.ChildrenLabels:
                 index = int(self.ChildrenTrTimes[child])
                 self.UpStream_Info_POST[child] =  self.ProductDemands[child] * \
-                                                np.array(UpStreamDemand[child]).astype(np.int)          
+                                                np.array(UpStreamDemand[child]).astype(np.int) 
+        #----------------------------------------------------------------------#
+        # DeBug
+        """
+        if self.ParentLabel == 8576:
+            print('')
+            print('Label:', self.Label)
+            print('Demand From DownStream:', list(DataFromParent))
+            print('ProductionPlan:', self.ProductionPlan)
+            print('MET:', self.DownStream_Info_POST)
+            print('UnMet:', Unmet)
+            if self.NumberOfChildren != 0:
+                for child in self.ChildrenLabels:
+                    print(self.InputInventory[child])
+                for child in self.ChildrenLabels:
+                    print(self.UpStream_Info_POST[child])
+                    print(child)
+                    break
+            print('OUTOUT:', self.OutputInventory)
+        """
+        #----------------------------------------------------------------------#       
     ##########################################
     # Produce Parts for TODAY
     def ProduceParts(self, Parent, DataFromChildren, DataFromParent):

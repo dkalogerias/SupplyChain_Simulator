@@ -29,8 +29,7 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         for child in ChildrenLabels:
             RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
             if t >= ChildrenTrTimes[child]:
-                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, 10, \
-                                                                                            LpInteger)
+                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, 10, LpInteger)
             else:
                 UPD_Vars[t][child] = 0
         RO_Vars.append(LpVariable("OutputInventory_%s" %t, 0, None, LpInteger))
@@ -40,16 +39,16 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
     # Define Objective
     ##########################
     # For loop implementation
-    #temp = []
-    #for t in range(H):
-    #    temp = temp + thetas[t] * U_Vars[t] + KO * RO_Vars[t] + \
-    #           lpSum(KI[p] * RI_Vars[t][p] for p in range(NumberOfChildren))
-    #prob += temp
+    temp = []
+    for t in range(H):
+        temp = temp + thetas[t] * U_Vars[t] + KO * RO_Vars[t] + \
+               lpSum(KI[child] * RI_Vars[t][child] for child in ChildrenLabels)
+    prob += temp
     ##########################
     # lpSum implementation
-    prob += lpSum(thetas[t] * U_Vars[t] + KO * RO_Vars[t] + \
-                  lpSum(KI[child] * RI_Vars[t][child] for child in ChildrenLabels) \
-                  for t  in range(H)), "Objective"
+    #prob += lpSum(thetas[t] * U_Vars[t] + KO * RO_Vars[t] + \
+    #              lpSum(KI[child] * RI_Vars[t][child] for child in ChildrenLabels) \
+    #              for t  in range(H)), "Objective"
     ###############################################################################
     # Define constraints
     for t in range(H):

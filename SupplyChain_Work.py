@@ -11,9 +11,9 @@ from SupplierClasses import Supplier, LocalPart
 print('\n===============================================')
 print()
 # Specify the Supplier Horizon (later, make this user input)
-H = 30
+H = 13
 # Specify the total chain time (also user input, later)
-T = 100
+T = 30
 print('Supplier Horizon Length (Days): ', H)
 print('Total Supply Chain Operation (Days): ', T)
 print()
@@ -29,10 +29,15 @@ SCParFile.write(''.join(['Void\n',
                          str(T * 24), '\n',
                          str(24 * 60), '\n',
                          'PartFlow PartFlow_Header.pf PartFlow_Data.pf', '\n',
+                         'InputInventory InputInventory_Header.pf InputInventory_Data.pf', '\n',
                          ]))
 SCParFile.close()
 # PartFlow header file
 PartFlowHeaderFile = open('PilotView/PartFlow_Header.pf','w')
+PartFlowHeaderFile.write('From To TIME Duration FLOW')
+PartFlowHeaderFile.close()
+# InputInventory header file
+PartFlowHeaderFile = open('PilotView/InputInventory_Header.pf','w')
 PartFlowHeaderFile.write('From To TIME Duration FLOW')
 PartFlowHeaderFile.close()
 ###############################################################################
@@ -52,6 +57,7 @@ print('\nSimulation Started...')
 # At each time step
 start = time.time() # Also start measuring total time
 PartFlowFile = open('PilotView/PartFlow_Data.pf','w') # Create and open file (for PilotView)
+InputInventoryFile = open('PilotView/InputInventory_Data.pf','w') # Create and open file (for PilotView)
 for t in range(T):
     startDay = time.time() # Also start measuring Supplier update time PER day
     print('============================================')
@@ -70,9 +76,17 @@ for t in range(T):
         TheParent = SupplierDict[ID].ParentLabel
         # Get the plans from all children to current Supplier
         tempSpec = dict()
+        # ALSO: Compute TOTAL input inventory for current Supplier (with no children)
+        tempTotalInv = 0
         if SupplierDict[ID].NumberOfChildren != 0:
             for child in SupplierDict[ID].ChildrenLabels:
                 tempSpec[child] = SupplierDict[child].DownStream_Info_PRE
+                tempTotalInv += SupplierDict[ID].InputInventory[child]
+            # ALSO: Write InputInventoryFile for current Supplier (for PilotView)
+            InputInventoryFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
+                                         str(int(SupplierDict[ID].Label)), \
+                                         str(24 * 60 * t), str(24 * 60), \
+                                         str(int(tempTotalInv)), '\n']))
         # Produce parts for today and update Supplier
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
         SupplierDict[ID].ProduceParts(SupplierDict[TheParent] if TheParent != -1 else -1,
@@ -98,12 +112,13 @@ for t in range(T):
                     PartFlowFile.write(' '.join([str(int(child)), \
                                                  str(int(SupplierDict[ID].Label)), \
                                                  str(24 * 60 * t), str(24 * 60), \
-                                                 str(int(childrenFlows[child])), '\n']))
+                                                 str(int(childrenFlows[child])), '\n']))          
     endDay = time.time() # End measuring Supplier update time PER day
     print('Time Elapsed (Suppliers Updating):', round(endDay - startDay, 2), 'sec.')
     #wait = input('PRESS ENTER TO CONTINUE.\n')
 # endfor
 PartFlowFile.close()
+InputInventoryFile.close()
 end = time.time() # End measuring total time
 print('\n... Done.')
 print('===============================================')
