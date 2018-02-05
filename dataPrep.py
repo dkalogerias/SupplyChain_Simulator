@@ -33,7 +33,7 @@ def dataPrep(H):
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 30000,
+                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 1000000,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -62,12 +62,14 @@ def dataPrep(H):
             # Thetas (tunable)
             thetas = 5 * np.random.rand(H)
             # Stock Cost per Unit
-            KO = 0.5 * np.random.rand(1)
+            #KO = 0.5 * np.random.rand(1)
+            KO = .01
             # Input cost per unit per part
-            KI = dict(zip(childList, 0.5 * np.random.rand(len(childList))))               
+            #KI = dict(zip(childList, 0.5 * np.random.rand(len(childList)))) 
+            KI = dict(zip(childList, .01 * np.ones((len(childList)))))                
             #------------------End of Parameters------------------#
             if attList[3] == -1: localCapacity = 1
-            else: localCapacity = 30000
+            else: localCapacity = 300
             # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
                                                 attList[3], -7, childList, spec, len(childList), -1,
@@ -175,9 +177,9 @@ def dataPrep(H):
         # BY THE WAY, fix thetas (tunable)!!!
         #SupplierDict[ID].thetas = 5 * np.random.rand(int(SupplierDict[ID].Horizon))
         # Put the initial value 1 to all thetas, for all Suppliers
-        #SupplierDict[ID].thetas = 5 * np.ones((int(SupplierDict[ID].Horizon)))
+        SupplierDict[ID].thetas = 1 * np.ones((int(SupplierDict[ID].Horizon)))
         # Exponentially decreasing thetas, for all Suppliers
-        SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 5, int(SupplierDict[ID].Horizon)))
+        #SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 5, int(SupplierDict[ID].Horizon)))
         # Write location file for PilotView
         LocFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
                                 str(SupplierDict[ID].Lat), \

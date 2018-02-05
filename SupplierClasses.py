@@ -126,8 +126,7 @@ class Supplier:
                                                 np.array(UpStreamDemand[child]).astype(np.int) 
         #----------------------------------------------------------------------#
         # DeBug
-        """
-        if self.ParentLabel == 8576:
+        if self.Label == 8576:
             print('')
             print('Label:', self.Label)
             print('Demand From DownStream:', list(DataFromParent))
@@ -136,13 +135,13 @@ class Supplier:
             print('UnMet:', Unmet)
             if self.NumberOfChildren != 0:
                 for child in self.ChildrenLabels:
-                    print(self.InputInventory[child])
-                for child in self.ChildrenLabels:
-                    print(self.UpStream_Info_POST[child])
                     print(child)
-                    break
+                    print(self.InputInventory[child])
+                    print(self.UpStream_Info_POST[child])
+                    print(self.ProductDemands[child])
+                    print(np.array(UpStreamDemand[child]).astype(np.int))
+                    print('')
             print('OUTOUT:', self.OutputInventory)
-        """
         #----------------------------------------------------------------------#       
     ##########################################
     # Produce Parts for TODAY
@@ -163,18 +162,18 @@ class Supplier:
         #print('Demand from DownStream:', DataFromParent)
         #print('Plan:', self.ProductionPlan)
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-        for item in range(MetDemandToday):
-            # Add part to parent's list of shipments
-            # Also update total unmet demand (from time 0)
-            if self.ParentLabel != -1:
-                Parent.ShipmentList.append(LocalPart(self.Label, self.ParentTrTime))
-                Parent.ProdFailure[self.Label] += self.CurrentUnMet
+        if self.ParentLabel != -1:
+            # Update total unmet demand (from time 0)
+            Parent.ProdFailure[self.Label] += self.CurrentUnMet           
+            for item in range(MetDemandToday):
+                # Add part to parent's list of shipments
+                Parent.ShipmentList.append(LocalPart(self.Label, self.ParentTrTime))                
 ###############################################################################
 # Definition of "Part" class     
 class LocalPart:
     # Constructor
     def __init__(self, From, DayCounter):
-        self.From = From                 # This should be a label       
+        self.From = From             # This should be a label       
         self.DayCounter = DayCounter # Day counter until arrival to destination
     ##########################################
     # Methods        

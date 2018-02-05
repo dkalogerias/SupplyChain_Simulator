@@ -71,7 +71,7 @@ for t in range(T):
                 part.LocalPartUpdate(SupplierDict[ID])
     # Produce Parts (and "PRIVATELY" update attributes) for EACH Supplier
     for ID, value in SupplierDict.items(): # This should be able to be performed in parallel
-        #print('Day', t + 1, '/ Updating Suppler ID:', int(ID))
+        #print('Day', t, '/ Updating Suppler ID:', int(ID))
         # Get label of parent to current Supplier
         TheParent = SupplierDict[ID].ParentLabel
         # Get the plans from all children to current Supplier

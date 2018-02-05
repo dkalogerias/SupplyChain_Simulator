@@ -29,7 +29,7 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         for child in ChildrenLabels:
             RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
             if t >= ChildrenTrTimes[child]:
-                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, 10, LpInteger)
+                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, 300, LpInteger)
             else:
                 UPD_Vars[t][child] = 0
         RO_Vars.append(LpVariable("OutputInventory_%s" %t, 0, None, LpInteger))
