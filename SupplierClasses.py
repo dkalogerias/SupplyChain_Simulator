@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Standard Libraries 
 import numpy as np
+import copy as cp
 # Custom Libraries
 from Functions import Plan_LookaheadMIP
 ###############################################################################
@@ -56,21 +57,21 @@ class Supplier:
             ProjectedShipments = dict(zip(self.ChildrenLabels, \
                                     np.zeros((self.NumberOfChildren, int(self.Horizon)))))
             # For each part in the list of shipments to the current supplier
-            for part in self.ShipmentList:
+            for shipment in self.ShipmentList:
                 # Get where part comes from
-                childFrom = part.From
+                childFrom = shipment.From
                 # Get current day counter of the part
-                partCounter = part.DayCounter
+                shipmentCounter = shipment.DayCounter
                 # If this counter is less than self.Horizon,
                 # then the part will arrive at the current Supplier on time.
                 # Recall that this counter cannot be smaller than zero;
                 # otherwise, the part has already arrived AND added to the
                 # inventory of the current supplier (+1 day)
                 # (and has been removed from the ShipmentList)
-                if int(partCounter) <= int(self.Horizon) - 1:
+                if int(shipmentCounter) <= int(self.Horizon) - 1:
                     # If the part will arrive, increase the
                     # corresponding ProjectedShipments entry by 1 
-                    ProjectedShipments[childFrom][int(partCounter) + 1] += 1
+                    ProjectedShipments[childFrom][int(shipmentCounter) + 1] += shipment.Size
         else:
             ProjectedShipments = dict(zip(self.ChildrenLabels, np.zeros((1, int(self.Horizon)))))
         #----------------------------------------------------------------------#
@@ -95,7 +96,8 @@ class Supplier:
         # Append with "data", "in the end" (heuristic)
         ExtDataFromParent = list(DataFromParent)
         ExtDataFromParent.append(DataFromParent[-1])
-        ExtDataFromParent.append(DataFromParent[-1])       
+        ExtDataFromParent.append(DataFromParent[-1])
+        ExtDataFromParent.append(DataFromParent[-1])        
         # Solve the MIP now!
         X_Values, UpStreamDemand, In, Out, Unmet = \
         Plan_LookaheadMIP(int(self.Horizon), self.NumberOfChildren, self.ChildrenLabels, self.ChildrenTrTimes,
@@ -105,6 +107,7 @@ class Supplier:
                           self.ProdCap, self.ProductDemands)
         # Update Supplier's Variables
         self.ProductionPlan = X_Values
+        tempII = cp.deepcopy(self.InputInventory)
         for child in self.ChildrenLabels:
             self.InputInventory[child] = In[child]
         self.OutputInventory = Out
@@ -122,24 +125,28 @@ class Supplier:
             # For each of the Suppliers children, DO
             for child in self.ChildrenLabels:
                 index = int(self.ChildrenTrTimes[child])
-                self.UpStream_Info_POST[child] =  self.ProductDemands[child] * \
-                                                np.array(UpStreamDemand[child]).astype(np.int) 
+                #self.UpStream_Info_POST[child] =  self.ProductDemands[child] * \
+                #                                np.array(UpStreamDemand[child]).astype(np.int) 
+                self.UpStream_Info_POST[child] = np.array(UpStreamDemand[child]).astype(np.int)
+                #self.UpStream_Info_POST[child][0] = 20
         #----------------------------------------------------------------------#
         # DeBug
-        if self.Label == 8576:
+        if self.Label == 2385:
             print('')
             print('Label:', self.Label)
             print('Demand From DownStream:', list(DataFromParent))
             print('ProductionPlan:', self.ProductionPlan)
             print('MET:', self.DownStream_Info_POST)
             print('UnMet:', Unmet)
+            print('')
             if self.NumberOfChildren != 0:
                 for child in self.ChildrenLabels:
                     print(child)
-                    print(self.InputInventory[child])
-                    print(self.UpStream_Info_POST[child])
-                    print(self.ProductDemands[child])
-                    print(np.array(UpStreamDemand[child]).astype(np.int))
+                    print('Travel Time:', self.ChildrenTrTimes[child])
+                    print('Input Inventory (BEFORE):' , tempII[child])
+                    print('Input Inventory (AFTER):' , self.InputInventory[child])
+                    print('Info Communicated Upstream:', self.UpStream_Info_POST[child])
+                    #print(self.ProductDemands[child])
                     print('')
             print('OUTOUT:', self.OutputInventory)
         #----------------------------------------------------------------------#       
@@ -164,23 +171,26 @@ class Supplier:
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
         if self.ParentLabel != -1:
             # Update total unmet demand (from time 0)
-            Parent.ProdFailure[self.Label] += self.CurrentUnMet           
-            for item in range(MetDemandToday):
-                # Add part to parent's list of shipments
-                Parent.ShipmentList.append(LocalPart(self.Label, self.ParentTrTime))                
+            Parent.ProdFailure[self.Label] += self.CurrentUnMet
+            if MetDemandToday > 0:          
+                # Add new shipment to parent's list of shipments
+                Parent.ShipmentList.append(LocalShipment(self.Label,
+                                                         self.ParentTrTime,
+                                                         MetDemandToday))                
 ###############################################################################
-# Definition of "Part" class     
-class LocalPart:
+# Definition of LocalShipment class     
+class LocalShipment:
     # Constructor
-    def __init__(self, From, DayCounter):
-        self.From = From             # This should be a label       
-        self.DayCounter = DayCounter # Day counter until arrival to destination
+    def __init__(self, From, DayCounter, Size):
+        self.From = From                 # This should be a label       
+        self.DayCounter = DayCounter     # Day counter until arrival to destination
+        self.Size = Size # Number of parts in the shipment
     ##########################################
     # Methods        
-    def LocalPartUpdate(self, Supplier):
+    def LocalShipmentUpdate(self, Supplier):
         # CAREFUL: +1 day After arrival!
         self.DayCounter -= 1
         if self.DayCounter == -1:
-            Supplier.InputInventory[self.From] += 1
+            Supplier.InputInventory[self.From] += self.Size
             Supplier.ShipmentList.remove(self)          
 ###############################################################################

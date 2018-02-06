@@ -6,7 +6,7 @@ import datetime as dt
 import matplotlib.pyplot as mp
 # Custom Libraries
 from dataPrep import *
-from SupplierClasses import Supplier, LocalPart
+from SupplierClasses import Supplier, LocalShipment
 ###############################################################################
 print('\n===============================================')
 print()
@@ -66,9 +66,9 @@ for t in range(T):
     for ID, value in SupplierDict.items():
         if SupplierDict[ID].NumberOfChildren != 0:
             # Iterate in a COPY of the current ShipmentList  
-            for part in SupplierDict[ID].ShipmentList[:]:
-                # Update parts in ShipmentList of current Supplier
-                part.LocalPartUpdate(SupplierDict[ID])
+            for shipment in SupplierDict[ID].ShipmentList[:]:
+                # Update shipment in ShipmentList of current Supplier
+                shipment.LocalShipmentUpdate(SupplierDict[ID])
     # Produce Parts (and "PRIVATELY" update attributes) for EACH Supplier
     for ID, value in SupplierDict.items(): # This should be able to be performed in parallel
         #print('Day', t, '/ Updating Suppler ID:', int(ID))
@@ -103,9 +103,9 @@ for t in range(T):
             childrenFlows = dict(zip(SupplierDict[ID].ChildrenLabels, \
                                      np.zeros((SupplierDict[ID].NumberOfChildren)))) 
             # Iterate in a COPY of the current ShipmentList
-            # For each part in ShipmentList, record its flow 
-            for part in SupplierDict[ID].ShipmentList:
-                childrenFlows[part.From] += 1 # Update Flow
+            # For each shipment in ShipmentList, record its flow 
+            for shipment in SupplierDict[ID].ShipmentList:
+                childrenFlows[shipment.From] += shipment.Size # Update Flow
             # Write PartFlowFile (for PilotView)
             for child in SupplierDict[ID].ChildrenLabels:
                 if childrenFlows[child] >= 1:

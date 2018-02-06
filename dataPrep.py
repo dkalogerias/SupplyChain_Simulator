@@ -33,7 +33,7 @@ def dataPrep(H):
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 1000000,
+                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 3000,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -66,10 +66,10 @@ def dataPrep(H):
             KO = .01
             # Input cost per unit per part
             #KI = dict(zip(childList, 0.5 * np.random.rand(len(childList)))) 
-            KI = dict(zip(childList, .01 * np.ones((len(childList)))))                
+            KI = dict(zip(childList, (.01/len(childList)) * np.ones((len(childList)))))                
             #------------------End of Parameters------------------#
-            if attList[3] == -1: localCapacity = 1
-            else: localCapacity = 300
+            if attList[3] == -1: localCapacity = 4
+            else: localCapacity = 3000
             # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
                                                 attList[3], -7, childList, spec, len(childList), -1,

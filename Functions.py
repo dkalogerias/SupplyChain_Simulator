@@ -28,8 +28,10 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         UPD_Vars.append(dict())
         for child in ChildrenLabels:
             RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
-            if t >= ChildrenTrTimes[child]:
-                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, 300, LpInteger)
+            if t >= ChildrenTrTimes[child] + 2 and child != -1:
+                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, 3000, LpInteger)
+            #elif t == ChildrenTrTimes[child] + 1:
+            #    UPD_Vars[t][child] = S[child][t]
             else:
                 UPD_Vars[t][child] = 0
         RO_Vars.append(LpVariable("OutputInventory_%s" %t, 0, None, LpInteger))
@@ -93,8 +95,11 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         In[child] = int(RI_Vars[0][child].varValue)
         UPD_Values[child] = list()
         for t in range(H):
-            if t >= ChildrenTrTimes[child]:
-                UPD_Values[child].append(int(UPD_Vars[t][child].varValue))
+            if child != -1:
+                if t >= ChildrenTrTimes[child] + 2:
+                    UPD_Values[child].append(int(UPD_Vars[t][child].varValue))
+            else:
+                UPD_Values[child].append(0)
     #for var in RI_Vars[0]:
     #    In.append(int(var.varValue))
     Out = int(RO_Vars[0].varValue)
