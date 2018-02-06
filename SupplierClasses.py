@@ -97,7 +97,7 @@ class Supplier:
         ExtDataFromParent = list(DataFromParent)
         ExtDataFromParent.append(DataFromParent[-1])
         ExtDataFromParent.append(DataFromParent[-1])
-        ExtDataFromParent.append(DataFromParent[-1])        
+        ExtDataFromParent.append(DataFromParent[-1])
         # Solve the MIP now!
         X_Values, UpStreamDemand, In, Out, Unmet = \
         Plan_LookaheadMIP(int(self.Horizon), self.NumberOfChildren, self.ChildrenLabels, self.ChildrenTrTimes,
@@ -117,18 +117,19 @@ class Supplier:
         # Generate DownStream_Info
         #self.DownStream_Info_POST = self.ProductionPlan
         # MET Demand
+        self.DownStream_Info_POST = np.zeros((int(self.Horizon)))
         for t in range(int(self.Horizon)): 
             self.DownStream_Info_POST[t] = ExtDataFromParent[t] - Unmet[t]
         #----------------------------------------------------------------------#
         # Generate UpStream_Info (this is given as downstream information to EACH child Supplier)
         if self.NumberOfChildren != 0:
+            self.UpStream_Info_POST = dict(zip(self.ChildrenLabels, \
+                                       np.zeros((self.NumberOfChildren, int(self.Horizon)))))
             # For each of the Suppliers children, DO
             for child in self.ChildrenLabels:
-                index = int(self.ChildrenTrTimes[child])
                 #self.UpStream_Info_POST[child] =  self.ProductDemands[child] * \
                 #                                np.array(UpStreamDemand[child]).astype(np.int) 
                 self.UpStream_Info_POST[child] = np.array(UpStreamDemand[child]).astype(np.int)
-                #self.UpStream_Info_POST[child][0] = 20
         #----------------------------------------------------------------------#
         # DeBug
         if self.Label == 8576:
@@ -161,10 +162,8 @@ class Supplier:
         # Actual Production for Today
         # Today's MET Demand
         MetDemandToday = int(DataFromParent[0] - self.CurrentUnMet)
-        #print('Met Demand:', MetDemandToday)
-        # Create a list for all produced parts
-        Produced = list()
-        # Produce parts one-by-one
+        #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+        # Produce Shipment!
         # No Worries: No need to update inventories.
         # This is taken care by the MIP (see above)
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#

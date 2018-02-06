@@ -8,17 +8,18 @@ from SupplierClasses import Supplier
 def dataPrep(H):
     print('========== Data Import & Preparation ==========')
     print('- Getting Supply Chain Structure from File...')
-    # Open sypply chain file: Chain.txt...
+    # Open sypply chain file: Chain.txt
     ChainFile = open("Chain.txt","r")
-    # Create an EMPTY DICTIONARY of Suppliers...
+    # Create an EMPTY DICTIONARY of Suppliers
     SupplierDict = dict()
-    # Fill the dictionary of Suppliers...
-    # For each line in the file...
+    # Fill the dictionary of Suppliers
+    # For each line in the file
+    GlobalCap = 6000 # Use for "debug"
     for line in ChainFile:
-        # If Line is empty, continue...
+        # If Line is empty, continue
         if len(line.strip()) == 0:
             continue
-        # Save attributes for each Supplier...
+        # Save attributes for each Supplier
         attList = np.array(line.split(',')).astype(np.float)
         # Case: Most upstream Suppliers (no Children)
         if attList[4] == -1:
@@ -35,7 +36,7 @@ def dataPrep(H):
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 8000,
+                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, GlobalCap,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -71,7 +72,7 @@ def dataPrep(H):
             KI = dict(zip(childList, (.01/len(childList)) * np.ones((len(childList)))))                
             #------------------End of Parameters------------------#
             if attList[3] == -1: localCapacity = 4
-            else: localCapacity = 8000
+            else: localCapacity = GlobalCap
             # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
                                                 attList[3], -7, childList, spec, len(childList), -1,
@@ -87,43 +88,43 @@ def dataPrep(H):
     print('... Done.')
     print('')
     print('- Update Travel Times for All Suppliers...')
-    # Update travel times for both parents and children, for each supplier...
+    # Update travel times for both parents and children, for each supplier
     for ID, value in SupplierDict.items():
-        # Exclude parentless Suppliers (root)...
+        # Exclude parentless Suppliers (root)
         if SupplierDict[ID].ParentLabel != -1:
-            # Extract lat and long of Parent...
+            # Extract lat and long of Parent
             ParLat = SupplierDict[SupplierDict[ID].ParentLabel].Lat
             ParLong = SupplierDict[SupplierDict[ID].ParentLabel].Long
-            # Compute distance of Supplier and its Parent in km...
-            # This uses *geopy*; has to be installed first...
+            # Compute distance of Supplier and its Parent in km
+            # This uses *geopy*; has to be installed first
             dist = vincenty((SupplierDict[ID].Lat, SupplierDict[ID].Long), (ParLat, ParLong)).km
             ##############################################
-            # This calculates travel times, ASSUMING an average speed of "speed" in km/h...
-            # Use custom code if needed for the computation of "ttime" below...
+            # This calculates travel times, ASSUMING an average speed of "speed" in km/h
+            # Use custom code if needed for the computation of "ttime" below
             speed = 150;
             ttime = (dist / speed) / 24
             ttime = np.ceil(ttime)
             ##############################################
-            # Update Parent travel time for current Supplier...
+            # Update Parent travel time for current Supplier
             SupplierDict[ID].ParentTrTime = ttime
-        # Exclude childrenless Suppliers (leafs)...
+        # Exclude childrenless Suppliers (leafs)
         if SupplierDict[ID].NumberOfChildren != 0:
-            # For each of the Suppliers children, DO...
+            # For each of the Suppliers children, DO
             for child in SupplierDict[ID].ChildrenLabels:
-                # Extract lat and long of Parent...
+                # Extract lat and long of Parent
                 ChildLat = SupplierDict[child].Lat
                 ChildLong = SupplierDict[child].Long
-                # Compute distance of Supplier and its Parent in km...
-                # This uses *geopy*; has to be installed first...
+                # Compute distance of Supplier and its Parent in km
+                # This uses *geopy*; has to be installed first
                 dist = vincenty((SupplierDict[ID].Lat, SupplierDict[ID].Long), (ChildLat, ChildLong)).km
                 ##############################################
-                # This calculates travel times, ASSUMING an average speed of "speed" in km/h...
-                # Use custom code if needed for the computation of "ttime" below...
+                # This calculates travel times, ASSUMING an average speed of "speed" in km/h
+                # Use custom code if needed for the computation of "ttime" below
                 speed = 150;
                 ttime = (dist / speed) / 24
                 ttime = np.ceil(ttime)
                 ##############################################
-                # Update Parent travel time for current Supplier...
+                # Update Parent travel time for current Supplier
                 SupplierDict[ID].ChildrenTrTimes[child] = ttime
     # endfor
     print('... Done.')

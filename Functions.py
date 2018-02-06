@@ -29,7 +29,7 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         for child in ChildrenLabels:
             RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
             if t >= ChildrenTrTimes[child] + 2 and child != -1:
-                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 20, 8000, LpInteger)
+                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 20, None, LpInteger)
             #elif t == ChildrenTrTimes[child] + 1:
             #    UPD_Vars[t][child] = S[child][t]
             else:
@@ -71,9 +71,9 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
     # Built-in Solver
     #prob.solve()
     # CPLEX
-    #prob.solve(CPLEX(msg = 0))
+    prob.solve(CPLEX(msg = 0))
     # Gurobi
-    prob.solve(GUROBI(msg = 0))
+    #prob.solve(GUROBI(msg = 0))
     # Print status of solution
     if LpStatus[prob.status] != 'Optimal':
         print('Optimization Status:', LpStatus[prob.status])

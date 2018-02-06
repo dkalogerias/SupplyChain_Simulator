@@ -4,6 +4,7 @@ import numpy as np
 import time as time
 import datetime as dt
 import matplotlib.pyplot as mp
+import copy as cp
 # Custom Libraries
 from dataPrep import *
 from SupplierClasses import Supplier, LocalShipment
@@ -95,8 +96,8 @@ for t in range(T):
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
     # Update PRE variables with POST variables
     for ID, value in SupplierDict.items():
-        SupplierDict[ID].DownStream_Info_PRE = SupplierDict[ID].DownStream_Info_POST
-        SupplierDict[ID].UpStream_Info_PRE = SupplierDict[ID].UpStream_Info_POST
+        SupplierDict[ID].DownStream_Info_PRE = cp.deepcopy(SupplierDict[ID].DownStream_Info_POST)
+        SupplierDict[ID].UpStream_Info_PRE = cp.deepcopy(SupplierDict[ID].UpStream_Info_POST)
         # Write PartFlowFile for current Supplier (for PilotView)
         if SupplierDict[ID].NumberOfChildren != 0:
             # Initialize dictionary for keeping the flow of each child
