@@ -26,14 +26,16 @@ def dataPrep(H):
             # Thetas (tunable)
             thetas = 5 * np.random.rand(H)
             # Stock Cost per Unit
-            KO = 5 * np.random.rand(1)
+            #KO = 5 * np.random.rand(1)
+            ΚΟ = .01
             # Input cost per unit per part
-            KI = dict(zip([-1], 3 * np.random.rand(1)))  
+            #KI = dict(zip([-1], 3 * np.random.rand(1))) 
+            KI = dict(zip([-1], [.01] )) 
             #------------------End of Parameters------------------#
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 3000,
+                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, 8000,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -69,7 +71,7 @@ def dataPrep(H):
             KI = dict(zip(childList, (.01/len(childList)) * np.ones((len(childList)))))                
             #------------------End of Parameters------------------#
             if attList[3] == -1: localCapacity = 4
-            else: localCapacity = 3000
+            else: localCapacity = 8000
             # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
                                                 attList[3], -7, childList, spec, len(childList), -1,

@@ -131,7 +131,7 @@ class Supplier:
                 #self.UpStream_Info_POST[child][0] = 20
         #----------------------------------------------------------------------#
         # DeBug
-        if self.Label == 2385:
+        if self.Label == 8576:
             print('')
             print('Label:', self.Label)
             print('Demand From DownStream:', list(DataFromParent))
@@ -139,6 +139,7 @@ class Supplier:
             print('MET:', self.DownStream_Info_POST)
             print('UnMet:', Unmet)
             print('')
+        """
             if self.NumberOfChildren != 0:
                 for child in self.ChildrenLabels:
                     print(child)
@@ -149,6 +150,8 @@ class Supplier:
                     #print(self.ProductDemands[child])
                     print('')
             print('OUTOUT:', self.OutputInventory)
+            wait = input('PRESS ENTER TO CONTINUE.\n')
+        """
         #----------------------------------------------------------------------#       
     ##########################################
     # Produce Parts for TODAY

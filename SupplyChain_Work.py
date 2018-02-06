@@ -13,7 +13,7 @@ print()
 # Specify the Supplier Horizon (later, make this user input)
 H = 13
 # Specify the total chain time (also user input, later)
-T = 30
+T = 70
 print('Supplier Horizon Length (Days): ', H)
 print('Total Supply Chain Operation (Days): ', T)
 print()
