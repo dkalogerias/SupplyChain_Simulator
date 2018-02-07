@@ -180,9 +180,9 @@ def dataPrep(H):
         # BY THE WAY, fix thetas (tunable)!!!
         #SupplierDict[ID].thetas = 5 * np.random.rand(int(SupplierDict[ID].Horizon))
         # Put the initial value 1 to all thetas, for all Suppliers
-        SupplierDict[ID].thetas = 1 * np.ones((int(SupplierDict[ID].Horizon)))
+        #SupplierDict[ID].thetas = 1 * np.ones((int(SupplierDict[ID].Horizon)))
         # Exponentially decreasing thetas, for all Suppliers
-        #SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 5, int(SupplierDict[ID].Horizon)))
+        SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 5, int(SupplierDict[ID].Horizon)))
         # Write location file for PilotView
         LocFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
                                 str(SupplierDict[ID].Lat), \

@@ -116,7 +116,7 @@ for t in range(T):
                                                  str(int(childrenFlows[child])), '\n']))          
     endDay = time.time() # End measuring Supplier update time PER day
     print('Time Elapsed (Suppliers Updating):', round(endDay - startDay, 2), 'sec.')
-    #wait = input('PRESS ENTER TO CONTINUE.\n')
+    if t>= 111: wait = input('PRESS ENTER TO CONTINUE.\n')
 # endfor
 PartFlowFile.close()
 InputInventoryFile.close()

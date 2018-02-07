@@ -132,7 +132,7 @@ class Supplier:
                 self.UpStream_Info_POST[child] = np.array(UpStreamDemand[child]).astype(np.int)
         #----------------------------------------------------------------------#
         # DeBug
-        if self.Label == 8065:
+        if self.Label == 9132:
             print('')
             print('Label:', self.Label)
             print('Demand From DownStream:', list(DataFromParent))
