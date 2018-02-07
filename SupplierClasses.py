@@ -132,27 +132,25 @@ class Supplier:
                 self.UpStream_Info_POST[child] = np.array(UpStreamDemand[child]).astype(np.int)
         #----------------------------------------------------------------------#
         # DeBug
-        if self.Label == 8576:
+        if self.Label == 8065:
             print('')
             print('Label:', self.Label)
             print('Demand From DownStream:', list(DataFromParent))
             print('ProductionPlan:', self.ProductionPlan)
             print('MET:', self.DownStream_Info_POST)
             print('UnMet:', Unmet)
+            #print('Input Inventory (AFTER):' , self.InputInventory)
             print('')
-        """
-            if self.NumberOfChildren != 0:
-                for child in self.ChildrenLabels:
-                    print(child)
-                    print('Travel Time:', self.ChildrenTrTimes[child])
-                    print('Input Inventory (BEFORE):' , tempII[child])
-                    print('Input Inventory (AFTER):' , self.InputInventory[child])
-                    print('Info Communicated Upstream:', self.UpStream_Info_POST[child])
-                    #print(self.ProductDemands[child])
-                    print('')
+            for child in self.ChildrenLabels:
+                print(child)
+                print('Travel Time:', self.ChildrenTrTimes[child])
+                #print('Input Inventory (BEFORE):' , tempII[child])
+                print('Input Inventory (AFTER):' , self.InputInventory[child])
+                print('Info Communicated Upstream:', self.UpStream_Info_POST[child])
+                #print(self.ProductDemands[child])
+                #print('')
             print('OUTOUT:', self.OutputInventory)
-            wait = input('PRESS ENTER TO CONTINUE.\n')
-        """
+            #wait = input('PRESS ENTER TO CONTINUE.\n')
         #----------------------------------------------------------------------#       
     ##########################################
     # Produce Parts for TODAY

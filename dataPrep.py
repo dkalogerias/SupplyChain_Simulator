@@ -14,7 +14,7 @@ def dataPrep(H):
     SupplierDict = dict()
     # Fill the dictionary of Suppliers
     # For each line in the file
-    GlobalCap = 6000 # Use for "debug"
+    GlobalCap = 8000 # Use for "debug"
     for line in ChainFile:
         # If Line is empty, continue
         if len(line.strip()) == 0:
@@ -28,15 +28,15 @@ def dataPrep(H):
             thetas = 5 * np.random.rand(H)
             # Stock Cost per Unit
             #KO = 5 * np.random.rand(1)
-            ΚΟ = .01
+            ΚΟ = .0001
             # Input cost per unit per part
             #KI = dict(zip([-1], 3 * np.random.rand(1))) 
-            KI = dict(zip([-1], [.01] )) 
+            KI = dict(zip([-1], [.0001] )) 
             #------------------End of Parameters------------------#
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [0])), dict(zip([-1], [1000000])), 0, GlobalCap,
+                                                dict(zip([-1], [1])), dict(zip([-1], [1000000])), 0, GlobalCap,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO)
@@ -66,12 +66,12 @@ def dataPrep(H):
             thetas = 5 * np.random.rand(H)
             # Stock Cost per Unit
             #KO = 0.5 * np.random.rand(1)
-            KO = .01
+            KO = 0.0001
             # Input cost per unit per part
             #KI = dict(zip(childList, 0.5 * np.random.rand(len(childList)))) 
-            KI = dict(zip(childList, (.01/len(childList)) * np.ones((len(childList)))))                
+            KI = dict(zip(childList, (0.0001/len(childList)) * np.ones((len(childList)))))                
             #------------------End of Parameters------------------#
-            if attList[3] == -1: localCapacity = 4
+            if attList[3] == -1: localCapacity = 1
             else: localCapacity = GlobalCap
             # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
