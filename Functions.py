@@ -11,7 +11,7 @@ from pulp import *
 def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
                       D, S, P,
                       RI_Current, RO_Current,
-                      thetas, KO, KI,
+                      thetas, KO, KI, KPro, KPur,
                       C, Q):
     ###############################################################################
     # Create problem (object)
@@ -30,12 +30,12 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
             RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
             if t >= ChildrenTrTimes[child] + 2 and child != -1:
                 UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, None, LpInteger)
-            elif t == ChildrenTrTimes[child] + 1 and child != -1:
-                UPD_Vars[t][child] = S[child][t]
+            #elif t == ChildrenTrTimes[child] + 1 and child != -1:
+            #    UPD_Vars[t][child] = S[child][t]
             else:
                 UPD_Vars[t][child] = 0
         RO_Vars.append(LpVariable("OutputInventory_%s" %t, 0, None, LpInteger))
-        X_Vars.append(LpVariable("ProductionDecision_%s" %t, 0, C, LpInteger))
+        X_Vars.append(LpVariable("ProductionDecision_%s" %t, 0, D[t], LpInteger))
         U_Vars.append(LpVariable("UnmetDemand_%s" %t, 0, None, LpInteger))
     ###############################################################################
     # Define Objective
@@ -43,8 +43,9 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
     # For loop implementation
     temp = []
     for t in range(H):
-        temp = temp + thetas[t] * U_Vars[t] + KO * RO_Vars[t] + \
-               lpSum(KI[child] * RI_Vars[t][child] for child in ChildrenLabels)
+        temp = temp + thetas[t] * U_Vars[t] + KO * RO_Vars[t] + KPro * X_Vars[t] + \
+               lpSum(KI[child] * RI_Vars[t][child] for child in ChildrenLabels) + \
+               lpSum(KPur[child] * UPD_Vars[t][child] for child in ChildrenLabels)
     prob += temp
     ##########################
     # lpSum implementation

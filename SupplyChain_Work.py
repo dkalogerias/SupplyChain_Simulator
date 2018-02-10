@@ -14,7 +14,7 @@ print()
 # Specify the Supplier Horizon (later, make this user input)
 H = 13
 # Specify the total chain time (also user input, later)
-T = 365
+T = 60
 print('Supplier Horizon Length (Days): ', H)
 print('Total Supply Chain Operation (Days): ', T)
 print()
@@ -116,7 +116,7 @@ for t in range(T):
                                                  str(int(childrenFlows[child])), '\n']))          
     endDay = time.time() # End measuring Supplier update time PER day
     print('Time Elapsed (Suppliers Updating):', round(endDay - startDay, 2), 'sec.')
-    if t>= 111: wait = input('PRESS ENTER TO CONTINUE.\n')
+    #if t>= 111: wait = input('PRESS ENTER TO CONTINUE.\n')
 # endfor
 PartFlowFile.close()
 InputInventoryFile.close()

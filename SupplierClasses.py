@@ -13,7 +13,7 @@ class Supplier:
                  ProductDemands, InputInventory, OutputInventory, ProdCap,
                  ProductionPlan, DownStream_Info_PRE, UpStream_Info_PRE, DownStream_Info_POST, UpStream_Info_POST,
                  ProdFailure, Horizon, CurrentUnMet, ShipmentList,
-                 thetas, KI, KO): # Last line: Parameters
+                 thetas, KI, KO, KPro, KPur): # Last line: Parameters
         self.Label = Label
         self.Lat = Lat
         self.Long = Long
@@ -38,7 +38,9 @@ class Supplier:
         self.ShipmentList = ShipmentList # Current shipments which have NOT stored in inventory YET
         self.thetas = thetas # Thetas (tunable)
         self.KI = KI # Input cost per unit per part
-        self.KO = KO # Stock Cost per Unit
+        self.KO = KO # Stock Cost per unit
+        self.KPro = KPro # Production cost per unit
+        self.KPur = KPur # Purchase Cost per unit per part
     ##########################################
     # Methods
     # Private method for updating the attributes of a Supplier
@@ -103,7 +105,7 @@ class Supplier:
         Plan_LookaheadMIP(int(self.Horizon), self.NumberOfChildren, self.ChildrenLabels, self.ChildrenTrTimes,
                           ExtDataFromParent[0 : int(self.Horizon)], ExtDataFromChildren, ProjectedShipments,
                           self.InputInventory, self.OutputInventory,
-                          self.thetas, self.KO, self.KI,
+                          self.thetas, self.KO, self.KI, self.KPro, self.KPur,
                           self.ProdCap, self.ProductDemands)
         # Update Supplier's Variables
         self.ProductionPlan = X_Values
@@ -132,15 +134,17 @@ class Supplier:
                 self.UpStream_Info_POST[child] = np.array(UpStreamDemand[child]).astype(np.int)
         #----------------------------------------------------------------------#
         # DeBug
-        if self.Label == 9132:
+        if self.Label == 8576:
             print('')
             print('Label:', self.Label)
+            print('Parent:', self.ParentLabel)
             print('Demand From DownStream:', list(DataFromParent))
             print('ProductionPlan:', self.ProductionPlan)
             print('MET:', self.DownStream_Info_POST)
             print('UnMet:', Unmet)
             #print('Input Inventory (AFTER):' , self.InputInventory)
             print('')
+        """
             for child in self.ChildrenLabels:
                 print(child)
                 print('Travel Time:', self.ChildrenTrTimes[child])
@@ -151,6 +155,7 @@ class Supplier:
                 #print('')
             print('OUTOUT:', self.OutputInventory)
             #wait = input('PRESS ENTER TO CONTINUE.\n')
+        """
         #----------------------------------------------------------------------#       
     ##########################################
     # Produce Parts for TODAY
