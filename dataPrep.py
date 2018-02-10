@@ -14,7 +14,7 @@ def dataPrep(H):
     SupplierDict = dict()
     # Fill the dictionary of Suppliers
     # For each line in the file
-    GlobalCap = 8000 # Use for "debug"
+    GlobalCap = 80000 # Use for "debug"
     for line in ChainFile:
         # If Line is empty, continue
         if len(line.strip()) == 0:
@@ -28,7 +28,7 @@ def dataPrep(H):
             thetas = 5 * np.random.rand(H)
             # Stock Cost per Unit
             #KO = 5 * np.random.rand(1)
-            ΚΟ = .0001
+            ΚΟ = 0.0008
             # Input cost per unit per part
             #KI = dict(zip([-1], 3 * np.random.rand(1))) 
             KI = dict(zip([-1], [.0001] ))
@@ -40,7 +40,7 @@ def dataPrep(H):
             # Construct Supplier...
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2],
                                                 attList[3], -7, [-1], dict(zip([-1], [0])), 0, -1,
-                                                dict(zip([-1], [1])), dict(zip([-1], [1000000])), 0, GlobalCap,
+                                                dict(zip([-1], [1])), dict(zip([-1], [10000000])), 0, GlobalCap,
                                                 np.zeros((H)), np.zeros((H)), -1, np.zeros((H)), -1,
                                                 -1, -1, 0, list(),
                                                 thetas, KI, KO, KPro, KPur)
@@ -70,16 +70,16 @@ def dataPrep(H):
             thetas = 5 * np.random.rand(H)
             # Stock Cost per Unit
             #KO = 0.5 * np.random.rand(1)
-            KO = 0.0001
+            KO = 0.0008
             # Input cost per unit per part
             #KI = dict(zip(childList, 0.5 * np.random.rand(len(childList)))) 
             KI = dict(zip(childList, (0.0001/len(childList)) * np.ones((len(childList))))) 
             # Production cost per unit
             KPro = 0.001
             # Purchase Cost per unit per part 
-            KPur = dict(zip(childList, (0.001) * np.ones((len(childList)))))               
+            KPur = dict(zip(childList, (0.001/len(childList)) * np.ones((len(childList)))))               
             #------------------End of Parameters------------------#
-            if attList[3] == -1: localCapacity = 1
+            if attList[3] == -1: localCapacity = GlobalCap
             else: localCapacity = GlobalCap
             # Construct Supplier
             SupplierDict[attList[0]] = Supplier(attList[0], attList[1], attList[2], 
@@ -180,7 +180,7 @@ def dataPrep(H):
         if SupplierDict[ID].NumberOfChildren != 0:
             for child in SupplierDict[ID].ChildrenLabels:
                 childHorizon = int(SupplierDict[ID].Horizon \
-                                - SupplierDict[ID].ChildrenTrTimes[child] - 2) # NOTE: -2 
+                                 - SupplierDict[ID].ChildrenTrTimes[child]) # NOTE: -2 
                 SupplierDict[ID].UpStream_Info_PRE[child] = np.zeros((childHorizon))
                 SupplierDict[ID].UpStream_Info_POST[child] = np.zeros((childHorizon))
         # Update maximum total travel lag
@@ -190,7 +190,7 @@ def dataPrep(H):
         # Put the initial value 1 to all thetas, for all Suppliers
         SupplierDict[ID].thetas = 1 * np.ones((int(SupplierDict[ID].Horizon)))
         # Exponentially decreasing thetas, for all Suppliers
-        #SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 5, int(SupplierDict[ID].Horizon)))
+        #SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 1, int(SupplierDict[ID].Horizon)))
         # Write location file for PilotView
         LocFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
                                 str(SupplierDict[ID].Lat), \

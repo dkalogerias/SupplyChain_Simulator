@@ -30,12 +30,12 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
             RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
             if t >= ChildrenTrTimes[child] + 2 and child != -1:
                 UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, None, LpInteger)
-            #elif t == ChildrenTrTimes[child] + 1 and child != -1:
+            #elif t <= ChildrenTrTimes[child] + 1 and child != -1:
             #    UPD_Vars[t][child] = S[child][t]
             else:
                 UPD_Vars[t][child] = 0
         RO_Vars.append(LpVariable("OutputInventory_%s" %t, 0, None, LpInteger))
-        X_Vars.append(LpVariable("ProductionDecision_%s" %t, 0, D[t], LpInteger))
+        X_Vars.append(LpVariable("ProductionDecision_%s" %t, 0, None, LpInteger))
         U_Vars.append(LpVariable("UnmetDemand_%s" %t, 0, None, LpInteger))
     ###############################################################################
     # Define Objective
@@ -64,7 +64,7 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         for child in ChildrenLabels:
             prob += RI_Vars[t][child] - RI_Previous[child] \
                         + Q[child] * X_Vars[t] - UPD_Vars[t][child] \
-                        - P[child][t] == 0
+                        - P[child][t] == 0 # - S[child][t] == 0
         prob += RO_Vars[t] - RO_Previous - X_Vars[t] + D[t] - U_Vars[t] == 0
         prob += U_Vars[t] - D[t] <= 0
     ###############################################################################
@@ -72,9 +72,9 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
     # Built-in Solver
     #prob.solve()
     # CPLEX
-    prob.solve(CPLEX(msg = 0))
+    #prob.solve(CPLEX(msg = 0))
     # Gurobi
-    #prob.solve(GUROBI(msg = 0))
+    prob.solve(GUROBI(msg = 0))
     # Print status of solution
     if LpStatus[prob.status] != 'Optimal':
         print('Optimization Status:', LpStatus[prob.status])

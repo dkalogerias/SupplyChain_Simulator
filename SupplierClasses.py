@@ -99,7 +99,6 @@ class Supplier:
         ExtDataFromParent = list(DataFromParent)
         ExtDataFromParent.append(DataFromParent[-1])
         ExtDataFromParent.append(DataFromParent[-1])
-        ExtDataFromParent.append(DataFromParent[-1])
         # Solve the MIP now!
         X_Values, UpStreamDemand, In, Out, Unmet = \
         Plan_LookaheadMIP(int(self.Horizon), self.NumberOfChildren, self.ChildrenLabels, self.ChildrenTrTimes,
@@ -128,12 +127,11 @@ class Supplier:
             self.UpStream_Info_POST = dict(zip(self.ChildrenLabels, \
                                        np.zeros((self.NumberOfChildren, int(self.Horizon)))))
             # For each of the Suppliers children, DO
-            for child in self.ChildrenLabels:
-                #self.UpStream_Info_POST[child] =  self.ProductDemands[child] * \
-                #                                np.array(UpStreamDemand[child]).astype(np.int) 
+            for child in self.ChildrenLabels: 
                 self.UpStream_Info_POST[child] = np.array(UpStreamDemand[child]).astype(np.int)
         #----------------------------------------------------------------------#
         # DeBug
+        #if self.CurrentUnMet > 0: print(self.treeDepth, int(self.Label), int(self.ParentLabel))
         if self.Label == 8576:
             print('')
             print('Label:', self.Label)
@@ -144,18 +142,17 @@ class Supplier:
             print('UnMet:', Unmet)
             #print('Input Inventory (AFTER):' , self.InputInventory)
             print('')
-        """
             for child in self.ChildrenLabels:
                 print(child)
-                print('Travel Time:', self.ChildrenTrTimes[child])
-                #print('Input Inventory (BEFORE):' , tempII[child])
-                print('Input Inventory (AFTER):' , self.InputInventory[child])
+                #print('Travel Time:', self.ChildrenTrTimes[child])
+                print('Input Inventory (BEFORE):', tempII[child])
+                print('Input Inventory (AFTER):', self.InputInventory[child])
+                print('Projected:', ProjectedShipments[child])
                 print('Info Communicated Upstream:', self.UpStream_Info_POST[child])
                 #print(self.ProductDemands[child])
                 #print('')
             print('OUTOUT:', self.OutputInventory)
             #wait = input('PRESS ENTER TO CONTINUE.\n')
-        """
         #----------------------------------------------------------------------#       
     ##########################################
     # Produce Parts for TODAY
