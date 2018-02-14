@@ -72,9 +72,9 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
     # Built-in Solver
     #prob.solve()
     # CPLEX
-    #prob.solve(CPLEX(msg = 0))
+    prob.solve(CPLEX(msg = 0))
     # Gurobi
-    prob.solve(GUROBI(msg = 0))
+    #prob.solve(GUROBI(msg = 0))
     # Print status of solution
     if LpStatus[prob.status] != 'Optimal':
         print('Optimization Status:', LpStatus[prob.status])
