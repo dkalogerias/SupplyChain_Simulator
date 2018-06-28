@@ -8,43 +8,75 @@ from pulp import *
 #                                  FUNCTIONS                                  #
 ###############################################################################
 ###############################################################################
-def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
-                      D, S, P,
+def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove number of children because no use
+                      D, P, #D = data from parents (length = horizon), S = data from children, P = projected shipments (length = horizon)
                       RI_Current, RO_Current,
-                      thetas, KO, KI, KPro, KPur,
-                      C, Q):
+                      thetas, KO, KI, KPro, KPur, Q, NumDiff): # C = Production Cap, Q = Projected demands from children, NumDiff = Number of different parts
     ###############################################################################
     # Create problem (object)
     prob = LpProblem("Production Plan Optimization", LpMinimize)
     ###############################################################################
     # Define decision variables
+    # Input inventory: a list of dictionaries whose keys are material types and values are quantities stored at each time point
     RI_Vars = list()
+    # upstream demand: a list of dictionaries whose keys are children indices and values are demand to each child at each time point
     UPD_Vars = list()
+    # Output inventory: a list of the amount of stored commodities at each time point
     RO_Vars = list()
+    # Production decision: a list of the amount of parts to produce at each time point
     X_Vars = list()
+    # Unmet demand: a list of dictionaries whose keys are parent labels and values are unmet demand of each of them at each time point
     U_Vars = list()
+    #######################SOME HELPFUL DECISION VARIABLES WHICH WE EVENTUALLY DO NOT USE###
+    #upstream demand grouped by types of materials supplied from children suppliers
+    UPD_Vars_group = list()
+
+    ################################################################################
+    # dictDiffParts
+    # key = label of parts, val = the children suppliers who supply each part
+    dictDiffParts = dict()
+    for i in range(NumDiff):
+        dictDiffParts[i+1] = []
+    for child in Q:
+        # Q[child][0] is the label of the part that this child supplier supplies
+        dictDiffParts[Q[child][0]].append(child)
+
+    # Construct these decision variables
     for t in range(H):
         RI_Vars.append(dict())
         UPD_Vars.append(dict())
+
+        for part in range(NumDiff):
+            RI_Vars[t][part + 1] = LpVariable("InputInventory_%s_%s" %(t, (part + 1)), 0, None, LpInteger)
+
         for child in ChildrenLabels:
-            RI_Vars[t][child] = LpVariable("InputInventory_%s_%s" %(t, child), 0, None, LpInteger)
-            if t >= ChildrenTrTimes[child] + 2 and child != -1:
-                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" %(t, child), 0, None, LpInteger)
-            #elif t <= ChildrenTrTimes[child] + 1 and child != -1:
+            if t >= ChildrenTrTimes[child] + 2 and child != -1:  # not the leaves
+                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" % (t, child), 0, None, LpInteger)
+            # elif t <= ChildrenTrTimes[child] + 1 and child != -1:
             #    UPD_Vars[t][child] = S[child][t]
             else:
                 UPD_Vars[t][child] = 0
-        RO_Vars.append(LpVariable("OutputInventory_%s" %t, 0, None, LpInteger))
-        X_Vars.append(LpVariable("ProductionDecision_%s" %t, 0, None, LpInteger))
-        U_Vars.append(LpVariable("UnmetDemand_%s" %t, 0, None, LpInteger))
+
+        RO_Vars.append(LpVariable("OutputInventory_%s" % t, 0, None, LpInteger))
+        X_Vars.append(LpVariable("ProductionDecision_%s" % t, 0, None, LpInteger))
+        U_Vars.append(dict())
+
+        for par in ParentLabels:
+            U_Vars[t][par] = LpVariable("UnmetDemand_%s_%s" % (t, par), 0, None, LpInteger)
+
+    # for i in range(NumDiff):
+    #     UPD_Vars_group.append(dict())
+
     ###############################################################################
     # Define Objective
     ##########################
     # For loop implementation
     temp = []
     for t in range(H):
-        temp = temp + thetas[t] * U_Vars[t] + KO * RO_Vars[t] + KPro * X_Vars[t] + \
-               lpSum(KI[child] * RI_Vars[t][child] for child in ChildrenLabels) + \
+        # thetas might be different for each parent
+        temp = temp + lpSum(thetas[t][par] * U_Vars[t][par] for par in ParentLabels) \
+               + KO * RO_Vars[t] + KPro * X_Vars[t] + \
+               lpSum(KI[part] * RI_Vars[t][part+1] for part in range(NumDiff)) + \
                lpSum(KPur[child] * UPD_Vars[t][child] for child in ChildrenLabels)
     prob += temp
     ##########################
@@ -61,12 +93,30 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         else:
             RI_Previous = RI_Vars[t - 1]
             RO_Previous = RO_Vars[t - 1]
-        for child in ChildrenLabels:
-            prob += RI_Vars[t][child] - RI_Previous[child] \
-                        + Q[child] * X_Vars[t] - UPD_Vars[t][child] \
-                        - P[child][t] == 0 # - S[child][t] == 0
-        prob += RO_Vars[t] - RO_Previous - X_Vars[t] + D[t] - U_Vars[t] == 0
-        prob += U_Vars[t] - D[t] <= 0
+        for part in dictDiffParts:
+            prob += RI_Vars[t][part] - RI_Previous[part] \
+                    + lpSum(Q[child][1]*Q[child][2]*X_Vars[t] \
+                            - UPD_Vars[t][child]  - P[child][t] for child in dictDiffParts[part]) == 0
+        # produce = (send to inventory) + (send to parents)
+        prob += RO_Vars[t] - RO_Previous - X_Vars[t] + lpSum(D[par][t] - U_Vars[t][par] for par in ParentLabels) == 0
+        for par in ParentLabels:
+            # send to each parent >= 0 (parents cannot return supplies)
+            prob += U_Vars[t][par] - D[par][t] <= 0
+        #need constraint about sum of children in one group = P of the group
+
+        ### add this part #######
+        ### has to make sure the ratio matches the chain.txt
+        ### and has to deal with the fact that travel times of children who supply the same ting are different
+        for part in dictDiffParts:
+            partChildren = []
+            for child in dictDiffParts[part]:
+                if ChildrenTrTimes[child] <= t - 2:
+                    partChildren.append(child)
+            for child in partChildren:
+                prob += (UPD_Vars[t][child]/lpSum(UPD_Vars[t][child2] for child2 in partChildren)) \
+                        - (Q[child][2]/lpSum(Q[child2][2] for child2 in partChildren)) == 0
+        #########################
+
     ###############################################################################
     # The problem is solved using our choice of solver (default: PuLP's solver)
     # Built-in Solver
@@ -92,8 +142,9 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
         X_Values.append(int(var.varValue))
     In = dict()
     UPD_Values = dict()
+    for part in range(NumDiff):
+        In[part] = int(RI_Vars[0][part].varValue)
     for child in ChildrenLabels:
-        In[child] = int(RI_Vars[0][child].varValue)
         UPD_Values[child] = list()
         for t in range(H):
             if child != -1:
@@ -104,8 +155,15 @@ def Plan_LookaheadMIP(H, NumberOfChildren, ChildrenLabels, ChildrenTrTimes,
     #for var in RI_Vars[0]:
     #    In.append(int(var.varValue))
     Out = int(RO_Vars[0].varValue)
-    UnMet = list()
-    for var in U_Vars:
-        UnMet.append(int(var.varValue))
+    UnMet = dict()
+    for par in ParentLabels:
+        UnMet[par] = list()
+        for t in range(H):
+            UnMet[par].append(U_Vars[t][par])
     # Return
+    # X_Values is a list of produced quantity over time horizon
+    # UPD_Values is a dictionary whose keys are children and values are upstream demand over time horizon
+    # In is a stored quantity in the input inventory, it's a dictionary whose keys are different product parts
+    # Out is a stored quantity in the output inventory. It's just a single number.
+    # Unmet is a dictionary whose keys are parents and values are unmet demand
     return X_Values, UPD_Values, In, Out, UnMet
