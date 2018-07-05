@@ -7,14 +7,14 @@ import matplotlib.pyplot as mp
 import copy as cp
 # Custom Libraries
 from dataPrep import *
-from SupplierClasses import Supplier, LocalShipment
+from SupplierClasses import *
 ###############################################################################
 print('\n===============================================')
 print()
 # Specify the Supplier Horizon (later, make this user input)
 H = 13
 # Specify the total chain time (also user input, later)
-T = 365
+T = 20
 print('Supplier Horizon Length (Days): ', H)
 print('Total Supply Chain Operation (Days): ', T)
 print()
@@ -74,25 +74,43 @@ for t in range(T):
     for ID, value in SupplierDict.items(): # This should be able to be performed in parallel
         #print('Day', t, '/ Updating Suppler ID:', int(ID))
         # Get label of parent to current Supplier
-        TheParent = SupplierDict[ID].ParentLabel
+        TheParents = SupplierDict[ID].ParentLabels
         # Get the plans from all children to current Supplier
-        tempSpec = dict()
+        dataFromChildren = dict()
         # ALSO: Compute TOTAL input inventory for current Supplier (with no children)
         tempTotalInv = 0
         if SupplierDict[ID].NumberOfChildren != 0:
             for child in SupplierDict[ID].ChildrenLabels:
-                tempSpec[child] = SupplierDict[child].DownStream_Info_PRE
-                tempTotalInv += SupplierDict[ID].InputInventory[child]
+                dataFromChildren[child] = SupplierDict[child].DownStream_Info_PRE[ID]
+        else:
+            dataFromChildren[-1] = np.zeros(SupplierDict[ID].Horizon)
+
+        for diffPart in range(SupplierDict[ID].NumberOfDiffParts):
+            tempTotalInv += SupplierDict[ID].InputInventory[diffPart+1]
             # ALSO: Write InputInventoryFile for current Supplier (for PilotView)
-            InputInventoryFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
-                                         str(int(SupplierDict[ID].Label)), \
-                                         str(24 * 60 * t), str(24 * 60), \
-                                         str(int(tempTotalInv)), '\n']))
+        InputInventoryFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
+                                            str(int(SupplierDict[ID].Label)), \
+                                            str(24 * 60 * t), str(24 * 60), \
+                                            str(int(tempTotalInv)), '\n']))
         # Produce parts for today and update Supplier
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
-        SupplierDict[ID].ProduceParts(SupplierDict[TheParent] if TheParent != -1 else -1,
-            DataFromChildren = tempSpec,
-            DataFromParent = SupplierDict[TheParent].UpStream_Info_PRE[ID] if TheParent != -1 else RootPlan[t : t + H])
+        # construct input variables for the ProduceParts function
+        if TheParents[0] != -1:
+            listParentSuppliers = dict()
+            dataFromParents = dict()
+            for par in TheParents:
+                listParentSuppliers[par] = SupplierDict[par]
+                dataFromParents[par] = SupplierDict[par].UpStream_Info_PRE[ID]
+            SupplierDict[ID].ProduceParts(listParentSuppliers, dataFromChildren, dataFromParents)
+
+        else:
+            dataFromParents = dict()
+            dataFromParents[-1] = RootPlan[t:t+H]
+            SupplierDict[ID].ProduceParts([-1], dataFromChildren, dataFromParents)
+
+        # SupplierDict[ID].ProduceParts(SupplierDict[TheParent] if TheParent != -1 else -1,
+        #     DataFromChildren = tempSpec,
+        #     DataFromParent = SupplierDict[TheParent].UpStream_Info_PRE[ID] if TheParent != -1 else RootPlan[t : t + H])
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
     # Update PRE variables with POST variables
     for ID, value in SupplierDict.items():
