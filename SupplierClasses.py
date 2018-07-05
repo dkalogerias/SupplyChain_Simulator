@@ -5,167 +5,6 @@ import copy as cp
 from pulp import *
 # Custom Libraries
 from Functions import *
-###############################################################################\
-def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove number of children because no use
-                      D, P, #D = data from parents (length = horizon), S = data from children, P = projected shipments (length = horizon)
-                      RI_Current, RO_Current,
-                      thetas, KO, KI, KPro, KPur, Q, NumDiff): # C = Production Cap, Q = Projected demands from children, NumDiff = Number of different parts
-    ###############################################################################
-    # Create problem (object)
-    prob = LpProblem("Production Plan Optimization", LpMinimize)
-    ###############################################################################
-    # Define decision variables
-    # Input inventory: a list of dictionaries whose keys are material types and values are quantities stored at each time point
-    RI_Vars = list()
-    # upstream demand: a list of dictionaries whose keys are children indices and values are demand to each child at each time point
-    UPD_Vars = list()
-    # Output inventory: a list of the amount of stored commodities at each time point
-    RO_Vars = list()
-    # Production decision: a list of the amount of parts to produce at each time point
-    X_Vars = list()
-    # Unmet demand: a list of dictionaries whose keys are parent labels and values are unmet demand of each of them at each time point
-    U_Vars = list()
-    #######################SOME HELPFUL DECISION VARIABLES WHICH WE EVENTUALLY DO NOT USE###
-    #upstream demand grouped by types of materials supplied from children suppliers
-    UPD_Vars_group = list()
-
-    ################################################################################
-    # dictDiffParts
-    # key = label of parts, val = the children suppliers who supply each part
-    dictDiffParts = dict()
-    for i in range(NumDiff):
-        dictDiffParts[i+1] = []
-    for child in Q:
-        # Q[child][0] is the label of the part that this child supplier supplies
-        dictDiffParts[Q[child][0]].append(child)
-
-    # Construct these decision variables
-    for t in range(H):
-        RI_Vars.append(dict())
-        UPD_Vars.append(dict())
-
-        for part in range(NumDiff):
-            RI_Vars[t][part + 1] = LpVariable("InputInventory_%s_%s" %(t, (part + 1)), 0, None, LpInteger)
-
-        for child in ChildrenLabels:
-            if t >= ChildrenTrTimes[child] + 2 and child != -1:  # not the leaves
-                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" % (t, child), 0, None, LpInteger)
-            # elif t <= ChildrenTrTimes[child] + 1 and child != -1:
-            #    UPD_Vars[t][child] = S[child][t]
-            else:
-                UPD_Vars[t][child] = 0
-
-        RO_Vars.append(LpVariable("OutputInventory_%s" % t, 0, None, LpInteger))
-        X_Vars.append(LpVariable("ProductionDecision_%s" % t, 0, None, LpInteger))
-        U_Vars.append(dict())
-
-        for par in ParentLabels:
-            U_Vars[t][par] = LpVariable("UnmetDemand_%s_%s" % (t, par), 0, None, LpInteger)
-
-    # for i in range(NumDiff):
-    #     UPD_Vars_group.append(dict())
-
-    ###############################################################################
-    # Define Objective
-    ##########################
-    # For loop implementation
-    temp = []
-    for t in range(H):
-        # thetas might be different for each parent
-        temp = temp + lpSum(thetas[t][par] * U_Vars[t][par] for par in ParentLabels) \
-               + KO * RO_Vars[t] + KPro * X_Vars[t] + \
-               lpSum(KI[part] * RI_Vars[t][part+1] for part in range(NumDiff)) + \
-               lpSum(KPur[child] * UPD_Vars[t][child] for child in ChildrenLabels)
-    prob += temp
-    ##########################
-    # lpSum implementation
-    #prob += lpSum(thetas[t] * U_Vars[t] + KO * RO_Vars[t] + \
-    #              lpSum(KI[child] * RI_Vars[t][child] for child in ChildrenLabels) \
-    #              for t  in range(H)), "Objective"
-    ###############################################################################
-    # Define constraints
-    for t in range(H):
-        if t == 0:
-            RI_Previous = RI_Current
-            RO_Previous = RO_Current
-        else:
-            RI_Previous = RI_Vars[t - 1]
-            RO_Previous = RO_Vars[t - 1]
-        for part in dictDiffParts:
-            prob += RI_Vars[t][part] - RI_Previous[part] \
-                    + lpSum(Q[child][1]*Q[child][2]*X_Vars[t] \
-                            - UPD_Vars[t][child]  - P[child][t] for child in dictDiffParts[part]) == 0
-        # produce = (send to inventory) + (send to parents)
-        prob += RO_Vars[t] - RO_Previous - X_Vars[t] + lpSum(D[par][t] - U_Vars[t][par] for par in ParentLabels) == 0
-        for par in ParentLabels:
-            # send to each parent >= 0 (parents cannot return supplies)
-            prob += U_Vars[t][par] - D[par][t] <= 0
-        #need constraint about sum of children in one group = P of the group
-
-        ### add this part #######
-        ### has to make sure the ratio matches the chain.txt
-        ### and has to deal with the fact that travel times of children who supply the same ting are different
-        for part in dictDiffParts:
-            partChildren = []
-            for child in dictDiffParts[part]:
-                if ChildrenTrTimes[child] <= t - 2:
-                    partChildren.append(child)
-            for child in partChildren:
-                prob += (UPD_Vars[t][child]/lpSum(UPD_Vars[t][child2] for child2 in partChildren)) \
-                        - (Q[child][2]/lpSum(Q[child2][2] for child2 in partChildren)) == 0
-        #########################
-
-    ###############################################################################
-    # The problem is solved using our choice of solver (default: PuLP's solver)
-    # Built-in Solver
-    #prob.solve()
-    # CPLEX
-    prob.solve(CPLEX(msg = 0))
-    # Gurobi
-    #prob.solve(GUROBI(msg = 0))
-    # Print status of solution
-    if LpStatus[prob.status] != 'Optimal':
-        print('Optimization Status:', LpStatus[prob.status])
-        wait = input('PRESS ENTER TO CONTINUE.\n')
-    #print('')
-    # Print each of the problem variables is printed with it's resolved optimum value
-    #for v in prob.variables():
-    #    print(v.name, "=", v.varValue)
-    # Print optimized objective function
-    #print('\nMinimum UnmetDemand-Penalized Total Inventory Cost:', value(prob.objective))
-    #print('')
-    # Save data for RETURN
-    X_Values = list()
-    for var in X_Vars:
-        X_Values.append(int(var.varValue))
-    In = dict()
-    UPD_Values = dict()
-    for part in range(NumDiff):
-        In[part] = int(RI_Vars[0][part].varValue)
-    for child in ChildrenLabels:
-        UPD_Values[child] = list()
-        for t in range(H):
-            if child != -1:
-                if t >= ChildrenTrTimes[child] + 2:
-                    UPD_Values[child].append(int(UPD_Vars[t][child].varValue))
-            else:
-                UPD_Values[child].append(0)
-    #for var in RI_Vars[0]:
-    #    In.append(int(var.varValue))
-    Out = int(RO_Vars[0].varValue)
-    UnMet = dict()
-    for par in ParentLabels:
-        UnMet[par] = list()
-        for t in range(H):
-            UnMet[par].append(U_Vars[t][par])
-    # Return
-    # X_Values is a list of produced quantity over time horizon
-    # UPD_Values is a dictionary whose keys are children and values are upstream demand over time horizon
-    # In is a stored quantity in the input inventory, it's a dictionary whose keys are different product parts
-    # Out is a stored quantity in the output inventory. It's just a single number.
-    # Unmet is a dictionary whose keys are parents and values are unmet demand
-    return X_Values, UPD_Values, In, Out, UnMet
-###############################################################################
 # Definition of "Supplier" class
 class Supplier:
     # Constructor...
@@ -193,14 +32,14 @@ class Supplier:
         self.InputInventory = InputInventory # dictionary whose keys are different parts (different types of input supplies)
         self.OutputInventory = OutputInventory # a number
         self.ProdCap = ProdCap # DIFFERENT among suppliers; has to be given in Chain.txt (ultimately)
-        self.ProductionPlan = ProductionPlan # PROJECTED Production plan at each day
+        self.ProductionPlan = ProductionPlan # PROJECTED Production plan at each day (This is a number list of length H)
         self.DownStream_Info_PRE = DownStream_Info_PRE # PRE (t-1): Information to be sent downstream
         self.UpStream_Info_PRE = UpStream_Info_PRE # PRE (t-1):Information to be sent upstream
         self.DownStream_Info_POST = DownStream_Info_POST # POST (t): Information to be sent downstream
         self.UpStream_Info_POST = UpStream_Info_POST # POST (t): Information to be sent upstream
-        self.ProdFailure = ProdFailure # Total UnMet demand PER Child (from Day 0)
+        self.ProdFailure = ProdFailure # Total UnMet demand PER Child (from Day 0) (one number per child)
         self.Horizon = Horizon # Local optimization horizon
-        self.CurrentUnMet = CurrentUnMet # Current Unmet Demand from its children
+        self.CurrentUnMet = CurrentUnMet # Current Unmet Demand of its parents2
         self.ShipmentList = ShipmentList # Current shipments from children which have NOT been stored in inventory YET
         self.thetas = thetas # Thetas (tunable)
         self.KI = KI # Input cost per unit per part
@@ -252,9 +91,17 @@ class Supplier:
                                      np.zeros((self.NumberOfChildren, int(self.Horizon)))))
             # Append with zeros "in the beginning"
             for child in self.ChildrenLabels:
+                # if len(ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ]) != len(DataFromChildren[child]):
+                #     print("LengthError")
+                #     print(self.Label)
+                #     print(child)
+                #     print(DataFromChildren[child])
+                #     print(len(ExtDataFromChildren[child]))
+                #     print(self.ChildrenTrTimes[child])
+                #     print(ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ])
                 ExtDataFromChildren[child][0 : int(self.ChildrenTrTimes[child])] = 0
                 ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ]  = \
-                                                                    DataFromChildren[child]
+                                                                    DataFromChildren[child][0:int(self.Horizon - self.ChildrenTrTimes[child])]
         else:
             ExtDataFromChildren = dict(zip(self.ChildrenLabels, np.zeros((1, int(self.Horizon)))))
         #----------------------------------------------------------------------#
@@ -262,13 +109,18 @@ class Supplier:
         # Extend data from parent!
         # Append with "data", "in the end" (heuristic)
         ExtDataFromParent = DataFromParent
-        for par in ExtDataFromParent:
-            ExtDataFromParent[par].append(DataFromParent[par][-1])
-            ExtDataFromParent[par].append(DataFromParent[par][-1])
+        for par in ExtDataFromParent.keys():
+            ExtDataFromParent[par] = np.append(ExtDataFromParent[par], [DataFromParent[par][-1]])
+            ExtDataFromParent[par] = np.append(ExtDataFromParent[par], [DataFromParent[par][-1]])
+            #np.concatenate([ExtDataFromParent[par], [DataFromParent[par][-1]]])
+            #np.concatenate([ExtDataFromParent[par], [DataFromParent[par][-1]]])
+            #ExtDataFromParent[par].append(DataFromParent[par][-1])
+            #ExtDataFromParent[par].append(DataFromParent[par][-1])
         # Solve the MIP now!
+
         X_Values, UpStreamDemand, In, Out, Unmet = \
         Plan_LookaheadMIP(int(self.Horizon), self.ParentLabels, self.ChildrenLabels,
-                          self.ChildrenTrTimes, ExtDataFromParent[0 : int(self.Horizon)],
+                          self.ChildrenTrTimes, ExtDataFromParent, #[0:int(self.Horizon)]
                           ProjectedShipments, self.InputInventory, self.OutputInventory,
                           self.thetas, self.KO, self.KI, self.KPro, self.KPur,
                           self.ProductDemands, self.NumberOfDiffParts)
@@ -299,7 +151,7 @@ class Supplier:
         for par in self.ParentLabels:
             self.DownStream_Info_POST[par] = list()
             for t in range(int(self.Horizon)):
-                self.DownStream_Intfo_POST[par].append(ExtDataFromParent[par][t] - Unmet[par][t])
+                self.DownStream_Info_POST[par].append(ExtDataFromParent[par][t] - Unmet[par][t])
         #----------------------------------------------------------------------#
         # Generate UpStream_Info (this is given as downstream information to EACH child Supplier)
         if self.NumberOfChildren != 0:
@@ -336,18 +188,20 @@ class Supplier:
         #----------------------------------------------------------------------#       
     ##########################################
     # Produce Parts for TODAY
-    def ProduceParts(self, DataFromChildren, DataFromParent):
+    def ProduceParts(self, Parents, DataFromChildren, DataFromParent):
+        # the input Parents is a list of supplier objects that are parents of the current node
         # Update Supplier
         self._SupplierUpdate(DataFromChildren, DataFromParent)
         # Actual Production for Today
         # Today's MET Demand
         MetDemandToday = dict()
-        if self.ParentLabels != [-1]:
-            for par in self.ParentLabels:
-                MetDemandToday[par] = int(DataFromParent[par][0] - self.CurrentUnMet[par])
-                par.ProdFailure[self.label] += self.CurrentUnMet[par]
-                if MetDemandToday[par] > 0:
-                    par.ShipmentList.append(LocalShipment(self.Label, par, self.ParentTrTime[par], MetDemandToday[par]))
+        if self.ParentLabels[0] != -1:
+            for parentIndex in Parents.keys():
+                parent = Parents[parentIndex]
+                MetDemandToday[parent.Label] = int(DataFromParent[parent.Label][0] - self.CurrentUnMet[parent.Label])
+                parent.ProdFailure[self.Label] += self.CurrentUnMet[parent.Label]
+                if MetDemandToday[parent.Label] > 0:
+                    parent.ShipmentList.append(LocalShipment(self.Label, parent.Label, self.ParentTrTime[parent.Label], MetDemandToday[parent.Label]))
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
         # Produce Shipment!
         # No Worries: No need to update inventories.
@@ -369,6 +223,7 @@ class LocalShipment:
     ##########################################
     # Methods        
     def LocalShipmentUpdate(self, Supplier):
+        print('hey')
         # CAREFUL: +1 day After arrival!
         # This Supplier is the parent supplier that this shipment is being shipped to
         self.DayCounter -= 1
