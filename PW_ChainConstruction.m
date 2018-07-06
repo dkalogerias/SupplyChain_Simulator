@@ -95,7 +95,7 @@ for i = 2:totallayer
 end
 %% create the output text file
 %% root node
-fileID = fopen('Chain.txt','w');
+fileID = fopen('PW_Chain_text.txt','w');
 line_vector = [];
 index = 1;
 for i = 1:numLayer2
