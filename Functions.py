@@ -8,13 +8,17 @@ from pulp import *
 #                                  FUNCTIONS                                  #
 ###############################################################################
 ###############################################################################
-def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove number of children because no use
+def Plan_LookaheadMIP(H, Hdict, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove number of children because no use
                       D, P, #D = data from parents (length = horizon), S = data from children, P = projected shipments (length = horizon)
                       RI_Current, RO_Current,
                       thetas, KO, KI, KPro, KPur, Q, NumDiff): # C = Production Cap, Q = Projected demands from children, NumDiff = Number of different parts
     ###############################################################################
     # Create problem (object)
     prob = LpProblem("Production Plan Optimization", LpMinimize)
+    ###############################################################################
+    # modify Q for leaf suppliers
+    if ChildrenLabels[0] == -1:
+        Q[-1] = [1, 1, 1]
     ###############################################################################
     # Define decision variables
     # Input inventory: a list of dictionaries whose keys are material types and values are quantities stored at each time point
@@ -34,10 +38,12 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
     ################################################################################
     # dictDiffParts
     # key = label of parts, val = the children suppliers who supply each part
+
     dictDiffParts = dict()
+
     for i in range(NumDiff):
         dictDiffParts[i+1] = []
-    for child in Q:
+    for child in Q.keys():
         # Q[child][0] is the label of the part that this child supplier supplies
         dictDiffParts[Q[child][0]].append(child)
 
@@ -62,7 +68,10 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
         U_Vars.append(dict())
 
         for par in ParentLabels:
-            U_Vars[t][par] = LpVariable("UnmetDemand_%s_%s" % (t, par), 0, None, LpInteger)
+            if t < Hdict[par]:
+                U_Vars[t][par] = LpVariable("UnmetDemand_%s_%s" % (t, par), 0, None, LpInteger)
+            else:
+                U_Vars[t][par] = 0
 
     # for i in range(NumDiff):
     #     UPD_Vars_group.append(dict())
@@ -76,7 +85,7 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
         # thetas might be different for each parent
         temp = temp + lpSum(thetas[t][par] * U_Vars[t][par] for par in ParentLabels) \
                + KO * RO_Vars[t] + KPro * X_Vars[t] + \
-               lpSum(KI[part] * RI_Vars[t][part+1] for part in range(NumDiff)) + \
+               lpSum(KI[part+1] * RI_Vars[t][part+1] for part in range(NumDiff)) + \
                lpSum(KPur[child] * UPD_Vars[t][child] for child in ChildrenLabels)
     prob += temp
     ##########################
@@ -86,6 +95,10 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
     #              for t  in range(H)), "Objective"
     ###############################################################################
     # Define constraints
+    for par in D.keys():
+        if len(D[par]) < H:
+            for i in range(H - len(D[par])):
+                D[par] = np.append(D[par],[0])
     for t in range(H):
         if t == 0:
             RI_Previous = RI_Current
@@ -93,7 +106,7 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
         else:
             RI_Previous = RI_Vars[t - 1]
             RO_Previous = RO_Vars[t - 1]
-        for part in dictDiffParts:
+        for part in dictDiffParts.keys():
             prob += RI_Vars[t][part] - RI_Previous[part] \
                     + lpSum(Q[child][1]*Q[child][2]*X_Vars[t] \
                             - UPD_Vars[t][child]  - P[child][t] for child in dictDiffParts[part]) == 0
@@ -101,20 +114,24 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
         prob += RO_Vars[t] - RO_Previous - X_Vars[t] + lpSum(D[par][t] - U_Vars[t][par] for par in ParentLabels) == 0
         for par in ParentLabels:
             # send to each parent >= 0 (parents cannot return supplies)
-            prob += U_Vars[t][par] - D[par][t] <= 0
+            if t < Hdict[par]:
+                prob += U_Vars[t][par] - D[par][t] <= 0
+            # if t > Hdict[par] or par == -1:
+            #     U_Vars[t][par] == 0
         #need constraint about sum of children in one group = P of the group
 
         ### add this part #######
         ### has to make sure the ratio matches the chain.txt
         ### and has to deal with the fact that travel times of children who supply the same ting are different
-        for part in dictDiffParts:
-            partChildren = []
-            for child in dictDiffParts[part]:
-                if ChildrenTrTimes[child] <= t - 2:
-                    partChildren.append(child)
-            for child in partChildren:
-                prob += (UPD_Vars[t][child]/lpSum(UPD_Vars[t][child2] for child2 in partChildren)) \
-                        - (Q[child][2]/lpSum(Q[child2][2] for child2 in partChildren)) == 0
+        if ChildrenLabels[0] != -1:
+            for part in dictDiffParts:
+                partChildren = []
+                for child in dictDiffParts[part]:
+                    if ChildrenTrTimes[child] <= t - 2:
+                        partChildren.append(child)
+                for child in partChildren:
+                    prob += (UPD_Vars[t][child]+P[child][t])*lpSum(Q[child2][2] for child2 in partChildren) - \
+                            Q[child][2]*lpSum(UPD_Vars[t][child2] + P[child2][t] for child2 in partChildren) == 0
         #########################
 
     ###############################################################################
@@ -122,7 +139,7 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
     # Built-in Solver
     #prob.solve()
     # CPLEX
-    prob.solve(CPLEX(msg = 0))
+    prob.solve(CPLEX(msg=0))
     # Gurobi
     #prob.solve(GUROBI(msg = 0))
     # Print status of solution
@@ -140,10 +157,11 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
     X_Values = list()
     for var in X_Vars:
         X_Values.append(int(var.varValue))
+
     In = dict()
     UPD_Values = dict()
     for part in range(NumDiff):
-        In[part] = int(RI_Vars[0][part].varValue)
+        In[part+1] = int(RI_Vars[0][part+1].varValue)
     for child in ChildrenLabels:
         UPD_Values[child] = list()
         for t in range(H):
@@ -159,11 +177,16 @@ def Plan_LookaheadMIP(H, ParentLabels, ChildrenLabels, ChildrenTrTimes, # remove
     for par in ParentLabels:
         UnMet[par] = list()
         for t in range(H):
-            UnMet[par].append(U_Vars[t][par])
+            if t < Hdict[par]:
+                UnMet[par].append(U_Vars[t][par].varValue)
+            else:
+                UnMet[par].append(U_Vars[t][par])
     # Return
     # X_Values is a list of produced quantity over time horizon
     # UPD_Values is a dictionary whose keys are children and values are upstream demand over time horizon
     # In is a stored quantity in the input inventory, it's a dictionary whose keys are different product parts
     # Out is a stored quantity in the output inventory. It's just a single number.
     # Unmet is a dictionary whose keys are parents and values are unmet demand
+
     return X_Values, UPD_Values, In, Out, UnMet
+#print('done this')

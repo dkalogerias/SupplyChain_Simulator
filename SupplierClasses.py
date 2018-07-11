@@ -12,7 +12,7 @@ class Supplier:
                  ParentLabels, ParentTrTimes, NumberOfParents, ChildrenLabels, ChildrenTrTimes, NumberOfChildren, treeDepth,
                  ProductDemands, NumberOfDiffParts,InputInventory, OutputInventory, ProdCap,
                  ProductionPlan, DownStream_Info_PRE, UpStream_Info_PRE, DownStream_Info_POST, UpStream_Info_POST,
-                 ProdFailure, Horizon, CurrentUnMet, ShipmentList,
+                 ProdFailure, Horizon, HorizonDict, CurrentUnMet, ShipmentList,
                  thetas, KI, KO, KPro, KPur): # Last line: Parameters
         self.Label = Label
         self.Lat = Lat
@@ -39,6 +39,7 @@ class Supplier:
         self.UpStream_Info_POST = UpStream_Info_POST # POST (t): Information to be sent upstream
         self.ProdFailure = ProdFailure # Total UnMet demand PER Child (from Day 0) (one number per child)
         self.Horizon = Horizon # Local optimization horizon
+        self.HorizonDict = HorizonDict # horizon corresponding to each parent
         self.CurrentUnMet = CurrentUnMet # Current Unmet Demand of its parents2
         self.ShipmentList = ShipmentList # Current shipments from children which have NOT been stored in inventory YET
         self.thetas = thetas # Thetas (tunable)
@@ -63,6 +64,7 @@ class Supplier:
         #----------------------------------------------------------------------#
         # Project inventories by projecting shipments
         if self.NumberOfChildren != 0:
+
             ProjectedShipments = dict(zip(self.ChildrenLabels, \
                                     np.zeros((self.NumberOfChildren, int(self.Horizon)))))
             # For each part in the list of shipments to the current supplier
@@ -100,8 +102,12 @@ class Supplier:
                 #     print(self.ChildrenTrTimes[child])
                 #     print(ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ])
                 ExtDataFromChildren[child][0 : int(self.ChildrenTrTimes[child])] = 0
-                ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ]  = \
-                                                                    DataFromChildren[child][0:int(self.Horizon - self.ChildrenTrTimes[child])]
+                if len(DataFromChildren[child]) != len(ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ]):
+                    print('debug: label ', self.Label)
+                    print('debug: child ', child)
+                    print('debug: 1 ', DataFromChildren[child])
+                    print('debug: 2 ', ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ])
+                ExtDataFromChildren[child][int(self.ChildrenTrTimes[child]) : ]  = DataFromChildren[child]
         else:
             ExtDataFromChildren = dict(zip(self.ChildrenLabels, np.zeros((1, int(self.Horizon)))))
         #----------------------------------------------------------------------#
@@ -119,7 +125,7 @@ class Supplier:
         # Solve the MIP now!
 
         X_Values, UpStreamDemand, In, Out, Unmet = \
-        Plan_LookaheadMIP(int(self.Horizon), self.ParentLabels, self.ChildrenLabels,
+        Plan_LookaheadMIP(int(self.Horizon), self.HorizonDict, self.ParentLabels, self.ChildrenLabels,
                           self.ChildrenTrTimes, ExtDataFromParent, #[0:int(self.Horizon)]
                           ProjectedShipments, self.InputInventory, self.OutputInventory,
                           self.thetas, self.KO, self.KI, self.KPro, self.KPur,
@@ -150,7 +156,7 @@ class Supplier:
         self.DownStream_Info_POST = dict()
         for par in self.ParentLabels:
             self.DownStream_Info_POST[par] = list()
-            for t in range(int(self.Horizon)):
+            for t in range(int(self.HorizonDict[par])):
                 self.DownStream_Info_POST[par].append(ExtDataFromParent[par][t] - Unmet[par][t])
         #----------------------------------------------------------------------#
         # Generate UpStream_Info (this is given as downstream information to EACH child Supplier)
@@ -223,7 +229,6 @@ class LocalShipment:
     ##########################################
     # Methods        
     def LocalShipmentUpdate(self, Supplier):
-        print('hey')
         # CAREFUL: +1 day After arrival!
         # This Supplier is the parent supplier that this shipment is being shipped to
         self.DayCounter -= 1

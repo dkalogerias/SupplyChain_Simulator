@@ -7,7 +7,6 @@ from SupplierClasses import *
 import matplotlib.pyplot as plt
 ###############################################################################
 def dataPrep(H):
-    print('hi')
     print('========== Data Import & Preparation ==========')
     print('- Getting Supply Chain Structure from File...')
     # Open sypply chain file: Chain.txt
@@ -41,12 +40,12 @@ def dataPrep(H):
             # Stock Cost per Unit
             # KO = 5 * np.random.rand(1)
             # KO is a single number since there is one type of output material
-            KO = 0.0008
+            KO = 0.008
             # Input cost per unit per part
             # the key of tis dictionary is [1] since there is only one type of material in the input inventory
             # generally, for the non-leaf suppliers, the length of the dictionary's key has to be equal to
             # the number of different parts that this supplier takes from its children suppliers
-            KI = dict(zip([1], [.0001] ))
+            KI = dict(zip([1], [20] ))
             # Production cost per unit
             KPro = .001
             # Purchase Cost per unit per part 
@@ -65,8 +64,10 @@ def dataPrep(H):
                                                 np.zeros((H)), dict(zip(parentList, np.zeros([len(parentList), H]))),
                                                 # Upstream_Info_PRE, Downstream_Info_POST
                                                 dict(zip([-1], [0])), dict(zip(parentList, np.zeros([len(parentList), H]))),
-                                                # Upstream_Info_POST, ProdFailure, Horizon, CurrentUnmet, ShipmentList
-                                                dict(zip([-1], [0])), dict(zip([-1],[0])), -1, dict(zip(parentList, np.zeros(len(parentList)))), list(),
+                                                # Upstream_Info_POST, ProdFailure, Horizon, HorizonDict
+                                                dict(zip([-1], [0])), dict(zip([-1],[0])), -1, dict(),
+                                                # CurrentUnmet, ShipmentList
+                                                dict(zip(parentList, np.zeros(len(parentList)))), list(),
                                                 # thetas, KI, KO, KPro, KPur
                                                 thetas, KI, KO, KPro, KPur)
         # Case: Rest of suppliers
@@ -133,9 +134,9 @@ def dataPrep(H):
 
             # Stock Cost per Unit
             # KO = 0.5 * np.random.rand(1)
-            KO = 0.0008
+            KO = 0.008
             # Input cost per unit per part
-            KI = dict(zip([(i+1) for i in range(NumberOfDiffParts)], (0.0001/NumberOfDiffParts) * np.ones(NumberOfDiffParts)))
+            KI = dict(zip([(i+1) for i in range(NumberOfDiffParts)], (20/NumberOfDiffParts) * np.ones(NumberOfDiffParts)))
             # Production cost per unit
             KPro = 0.001
             # Purchase Cost per unit per part 
@@ -158,8 +159,8 @@ def dataPrep(H):
                                                 np.zeros((H)), spec4_PRE,
                                                 # Upstream_Info_PRE, Downstream_Info_POST
                                                 spec5_PRE, spec4_POST,
-                                                # Upstream_Info_POST, ProdFailure, Horizon, CurrentUnmet, ShipmentList
-                                                spec5_POST, spec6, -1, spec7, list(),
+                                                # Upstream_Info_POST, ProdFailure, Horizon, HorizonDict, CurrentUnmet, ShipmentList
+                                                spec5_POST, spec6, -1, dict(), spec7, list(),
                                                 # thetas, KI, KO, KPro, KPur
                                                 thetas, KI, KO, KPro, KPur)
         # If this happens the code is flawed!
@@ -188,7 +189,7 @@ def dataPrep(H):
                 # Use custom code if needed for the computation of "ttime" below
                 speed = 150
                 ttime = (dist / speed) / 24
-                ttime = np.ceil(ttime)
+                ttime = int(np.ceil(ttime))
                 ##############################################
                 # Update Parent travel time for current Supplier
                 SupplierDict[ID].ParentTrTime[par] = ttime
@@ -227,26 +228,26 @@ def dataPrep(H):
 
     # determine supplier horizons
     for ID in uniqueID:
-        if SupplierDict[ID].ParentLabels[0] == -1:
-            # this is the root supplier
-            SupplierDict[ID].Horizon = H
-        else:
-            # each supplier's horizon = the horizon - each travel time
-            listHorizon = [SupplierDict[parID].Horizon - SupplierDict[ID].ParentTrTime[parID] for parID in SupplierDict[ID].ParentLabels]
-            SupplierDict[ID].Horizon = int(max(listHorizon))
-        # Update Supplier's DownStream_Info to reflect the new horizon
-        SupplierDict[ID].DownStream_Info_PRE = dict(zip(SupplierDict[ID].ParentLabels,
-                                                        np.zeros((SupplierDict[ID].NumberOfParents,
-                                                                  SupplierDict[ID].Horizon))))
-        SupplierDict[ID].DownStream_Info_POST = dict(zip(SupplierDict[ID].ParentLabels,
-                                                        np.zeros((SupplierDict[ID].NumberOfParents,
-                                                                  SupplierDict[ID].Horizon))))
+        listHorizon = []
+        for parID in SupplierDict[ID].ParentLabels:
+            if parID == -1:
+                SupplierDict[ID].HorizonDict[parID] = H
+                listHorizon.append(H)
+            else:
+                SupplierDict[ID].HorizonDict[parID] = SupplierDict[parID].Horizon - SupplierDict[ID].ParentTrTime[parID]
+                listHorizon.append(SupplierDict[parID].Horizon - SupplierDict[ID].ParentTrTime[parID])
+            # Update Supplier's DownStream_Info to reflect the new horizon
+            SupplierDict[ID].DownStream_Info_PRE[parID] = np.zeros(SupplierDict[ID].HorizonDict[parID])
+            SupplierDict[ID].DownStream_Info_POST[parID] = np.zeros(SupplierDict[ID].HorizonDict[parID])
+        SupplierDict[ID].Horizon = int(max(listHorizon))
+
     # Update Supplier's UpStream_Info to reflect the new horizon
     for ID in uniqueID:
         if SupplierDict[ID].NumberOfChildren != 0:
             for child in SupplierDict[ID].ChildrenLabels:
                 childHorizon = int(SupplierDict[ID].Horizon - SupplierDict[ID].ChildrenTrTimes[child])
                 SupplierDict[ID].UpStream_Info_POST[child] = np.zeros(childHorizon)
+                SupplierDict[ID].UpStream_Info_PRE[child] = np.zeros(childHorizon)
 
     # determine tree depths
     for ID in uniqueID:
@@ -273,8 +274,7 @@ def dataPrep(H):
         # BY THE WAY, fix thetas (tunable)!!!
         #SupplierDict[ID].thetas = 5 * np.random.rand(int(SupplierDict[ID].Horizon))
         # Put the initial value 1 to all thetas, for all Suppliers
-        for t in range(SupplierDict[ID].Horizon):
-            SupplierDict[ID].thetas[t] = dict(zip(SupplierDict[ID].ParentLabels, np.ones(SupplierDict[ID].NumberOfParents)))
+        SupplierDict[ID].thetas = [dict(zip(SupplierDict[ID].ParentLabels, np.ones(SupplierDict[ID].NumberOfParents))) for t in range(SupplierDict[ID].Horizon)]
         # Exponentially decreasing thetas, for all Suppliers
         #SupplierDict[ID].thetas = 5 * np.exp(-4 * np.linspace(0, 1, int(SupplierDict[ID].Horizon)))
         # Write location file for PilotView

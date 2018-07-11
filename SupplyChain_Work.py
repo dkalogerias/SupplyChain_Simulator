@@ -50,9 +50,10 @@ PartList = list()
 RootPlan = np.zeros((T + H))
 # Fixed Root Plan
 # This should be given
-RootPlan[0: T] = np.ones((T))
+RootPlan[0: T] = 1 + np.random.randint(5, size = T)
 # Auxiliary end of plan; All zeros
 RootPlan[T: ] = 0
+print(RootPlan)
 # Start Simulation
 print('\nSimulation Started...')
 # At each time step
@@ -82,6 +83,7 @@ for t in range(T):
         if SupplierDict[ID].NumberOfChildren != 0:
             for child in SupplierDict[ID].ChildrenLabels:
                 dataFromChildren[child] = SupplierDict[child].DownStream_Info_PRE[ID]
+                #length of each of this is self.Horizon - child's travel time
         else:
             dataFromChildren[-1] = np.zeros(SupplierDict[ID].Horizon)
 
@@ -143,3 +145,6 @@ print('\n... Done.')
 print('===============================================')
 print('Time Elapsed (total):', round(end - start, 2), 'sec.')
 ###############################################################################
+# Here I use KO = 2 for root , else 4
+# with some zero entries, day 0 takes 120 secs and from day 1 onwards each day takes about 300 secs
+# with only nonzeros, day 0 takes 19 secs, day 1 takes 21 secs, day 2 takes 32 secs, day 3 takes 41 secs
