@@ -40,12 +40,12 @@ def dataPrep(H):
             # Stock Cost per Unit
             # KO = 5 * np.random.rand(1)
             # KO is a single number since there is one type of output material
-            KO = 0.008
+            KO = 0.001
             # Input cost per unit per part
             # the key of tis dictionary is [1] since there is only one type of material in the input inventory
             # generally, for the non-leaf suppliers, the length of the dictionary's key has to be equal to
             # the number of different parts that this supplier takes from its children suppliers
-            KI = dict(zip([1], [20] ))
+            KI = dict(zip([1], [0.0001] ))
             # Production cost per unit
             KPro = .001
             # Purchase Cost per unit per part 
@@ -134,9 +134,9 @@ def dataPrep(H):
 
             # Stock Cost per Unit
             # KO = 0.5 * np.random.rand(1)
-            KO = 0.008
+            KO = 0.001
             # Input cost per unit per part
-            KI = dict(zip([(i+1) for i in range(NumberOfDiffParts)], (20/NumberOfDiffParts) * np.ones(NumberOfDiffParts)))
+            KI = dict(zip([(i+1) for i in range(NumberOfDiffParts)], (0.001/NumberOfDiffParts) * np.ones(NumberOfDiffParts)))
             # Production cost per unit
             KPro = 0.001
             # Purchase Cost per unit per part 

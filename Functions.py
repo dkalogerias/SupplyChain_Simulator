@@ -53,23 +53,23 @@ def Plan_LookaheadMIP(H, Hdict, ParentLabels, ChildrenLabels, ChildrenTrTimes, #
         UPD_Vars.append(dict())
 
         for part in range(NumDiff):
-            RI_Vars[t][part + 1] = LpVariable("InputInventory_%s_%s" %(t, (part + 1)), 0, None, LpInteger)
+            RI_Vars[t][part + 1] = LpVariable("InputInventory_%s_%s" %(t, (part + 1)), 0, None)
 
         for child in ChildrenLabels:
             if t >= ChildrenTrTimes[child] + 2 and child != -1:  # not the leaves
-                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" % (t, child), 0, None, LpInteger)
+                UPD_Vars[t][child] = LpVariable("UpStreamDemand_%s_%s" % (t, child), 0, None)
             # elif t <= ChildrenTrTimes[child] + 1 and child != -1:
             #    UPD_Vars[t][child] = S[child][t]
             else:
                 UPD_Vars[t][child] = 0
 
-        RO_Vars.append(LpVariable("OutputInventory_%s" % t, 0, None, LpInteger))
-        X_Vars.append(LpVariable("ProductionDecision_%s" % t, 0, None, LpInteger))
+        RO_Vars.append(LpVariable("OutputInventory_%s" % t, 0, None))
+        X_Vars.append(LpVariable("ProductionDecision_%s" % t, 0, None))
         U_Vars.append(dict())
 
         for par in ParentLabels:
             if t < Hdict[par]:
-                U_Vars[t][par] = LpVariable("UnmetDemand_%s_%s" % (t, par), 0, None, LpInteger)
+                U_Vars[t][par] = LpVariable("UnmetDemand_%s_%s" % (t, par), 0, None)
             else:
                 U_Vars[t][par] = 0
 
@@ -156,23 +156,23 @@ def Plan_LookaheadMIP(H, Hdict, ParentLabels, ChildrenLabels, ChildrenTrTimes, #
     # Save data for RETURN
     X_Values = list()
     for var in X_Vars:
-        X_Values.append(int(var.varValue))
+        X_Values.append(var.varValue)
 
     In = dict()
     UPD_Values = dict()
     for part in range(NumDiff):
-        In[part+1] = int(RI_Vars[0][part+1].varValue)
+        In[part+1] = RI_Vars[0][part+1].varValue
     for child in ChildrenLabels:
         UPD_Values[child] = list()
         for t in range(H):
             if child != -1:
                 if t >= ChildrenTrTimes[child] + 2:
-                    UPD_Values[child].append(int(UPD_Vars[t][child].varValue))
+                    UPD_Values[child].append(UPD_Vars[t][child].varValue)
             else:
                 UPD_Values[child].append(0)
     #for var in RI_Vars[0]:
     #    In.append(int(var.varValue))
-    Out = int(RO_Vars[0].varValue)
+    Out = RO_Vars[0].varValue
     UnMet = dict()
     for par in ParentLabels:
         UnMet[par] = list()

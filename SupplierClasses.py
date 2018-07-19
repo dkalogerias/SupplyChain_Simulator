@@ -204,7 +204,7 @@ class Supplier:
         if self.ParentLabels[0] != -1:
             for parentIndex in Parents.keys():
                 parent = Parents[parentIndex]
-                MetDemandToday[parent.Label] = int(DataFromParent[parent.Label][0] - self.CurrentUnMet[parent.Label])
+                MetDemandToday[parent.Label] = DataFromParent[parent.Label][0] - self.CurrentUnMet[parent.Label]
                 parent.ProdFailure[self.Label] += self.CurrentUnMet[parent.Label]
                 if MetDemandToday[parent.Label] > 0:
                     parent.ShipmentList.append(LocalShipment(self.Label, parent.Label, self.ParentTrTime[parent.Label], MetDemandToday[parent.Label]))

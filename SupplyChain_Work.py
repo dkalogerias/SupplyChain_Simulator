@@ -14,7 +14,7 @@ print()
 # Specify the Supplier Horizon (later, make this user input)
 H = 13
 # Specify the total chain time (also user input, later)
-T = 20
+T = 40
 print('Supplier Horizon Length (Days): ', H)
 print('Total Supply Chain Operation (Days): ', T)
 print()
@@ -50,16 +50,23 @@ PartList = list()
 RootPlan = np.zeros((T + H))
 # Fixed Root Plan
 # This should be given
-RootPlan[0: T] = 1 + np.random.randint(5, size = T)
+RootPlan[0: T] = np.random.randint(5, size = T)
 # Auxiliary end of plan; All zeros
 RootPlan[T: ] = 0
 print(RootPlan)
+RootPlanFile = open('PilotView/RootPlan_Data.pf', 'w')
+for i in range(T+H):
+    RootPlanFile.write(' '.join([str(int(RootPlan[i])), '\n']))
+RootPlanFile.close()
 # Start Simulation
 print('\nSimulation Started...')
 # At each time step
 start = time.time() # Also start measuring total time
 PartFlowFile = open('PilotView/PartFlow_Data.pf','w') # Create and open file (for PilotView)
 InputInventoryFile = open('PilotView/InputInventory_Data.pf','w') # Create and open file (for PilotView)
+OutputInventoryFile = open('PilotView/OutputInventory_Data.pf','w')
+ProdPlanFile = open('PilotView/ProdPlan_Data.pf','w')
+ProdFailureFile = open('PilotView/ProdFailure_Data.pf','w')
 for t in range(T):
     startDay = time.time() # Also start measuring Supplier update time PER day
     print('============================================')
@@ -89,11 +96,11 @@ for t in range(T):
 
         for diffPart in range(SupplierDict[ID].NumberOfDiffParts):
             tempTotalInv += SupplierDict[ID].InputInventory[diffPart+1]
+            InputInventoryFile.write(' '.join(
+                [str(int(SupplierDict[ID].Label)), str(diffPart + 1), str(24 * 60 * t), str(24 * 60), str(round(tempTotalInv, 2)),
+                 '\n']))
             # ALSO: Write InputInventoryFile for current Supplier (for PilotView)
-        InputInventoryFile.write(' '.join([str(int(SupplierDict[ID].Label)), \
-                                            str(int(SupplierDict[ID].Label)), \
-                                            str(24 * 60 * t), str(24 * 60), \
-                                            str(int(tempTotalInv)), '\n']))
+
         # Produce parts for today and update Supplier
         #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
         # construct input variables for the ProduceParts function
@@ -133,13 +140,23 @@ for t in range(T):
                     PartFlowFile.write(' '.join([str(int(child)), \
                                                  str(int(SupplierDict[ID].Label)), \
                                                  str(24 * 60 * t), str(24 * 60), \
-                                                 str(int(childrenFlows[child])), '\n']))          
+                                                 str(int(childrenFlows[child])), '\n']))
+
+            OutputInventoryFile.write(' '.join([str(int(ID)),
+                                                str(24 * 60 * t), str(24 * 60),
+                                                str(round(SupplierDict[ID].OutputInventory, 2)), '\n']))
+            ProdPlanFile.write(' '.join([str(int(ID)), str(24 * 60 * t), str(24 * 60),
+                                         str(round(SupplierDict[ID].ProductionPlan[0], 2)), '\n']))
+
     endDay = time.time() # End measuring Supplier update time PER day
     print('Time Elapsed (Suppliers Updating):', round(endDay - startDay, 2), 'sec.')
     #if t>= 111: wait = input('PRESS ENTER TO CONTINUE.\n')
 # endfor
 PartFlowFile.close()
 InputInventoryFile.close()
+OutputInventoryFile.close()
+ProdFailureFile.close()
+ProdPlanFile.close()
 end = time.time() # End measuring total time
 print('\n... Done.')
 print('===============================================')
